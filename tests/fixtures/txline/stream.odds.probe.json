@@ -1,0 +1,10 @@
+{
+  "capturedAt": "2026-07-18T17:01:31.070Z",
+  "network": "mainnet",
+  "stream": "odds",
+  "status": 200,
+  "contentType": "text/event-stream",
+  "chunks": 1,
+  "bytes": 42,
+  "preview": "data: {\"Ts\":1784394091}\nevent: heartbeat\n\n"
+}

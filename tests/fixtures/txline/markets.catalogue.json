@@ -1,0 +1,59 @@
+{
+  "capturedAt": "2026-07-18T17:01:50.356Z",
+  "network": "mainnet",
+  "competitionId": 72,
+  "competition": "World Cup",
+  "fixtures": [
+    {
+      "fixtureId": 18257739,
+      "match": "Spain vs Argentina",
+      "gameState": 1,
+      "oddsRows": 0,
+      "superOddsTypes": []
+    },
+    {
+      "fixtureId": 18257865,
+      "match": "France vs England",
+      "gameState": 1,
+      "oddsRows": 8,
+      "superOddsTypes": [
+        {
+          "type": "1X2_PARTICIPANT_RESULT",
+          "count": 1,
+          "inRunning": false,
+          "marketParameters": [null],
+          "marketPeriods": [null],
+          "priceNames": ["part1", "draw", "part2"]
+        },
+        {
+          "type": "ASIANHANDICAP_PARTICIPANT_GOALS",
+          "count": 4,
+          "inRunning": false,
+          "marketParameters": ["line=0", "line=-0.25", "line=0.25", "line=0.5"],
+          "marketPeriods": [null],
+          "priceNames": ["part1", "part2"]
+        },
+        {
+          "type": "OVERUNDER_PARTICIPANT_GOALS",
+          "count": 3,
+          "inRunning": false,
+          "marketParameters": ["line=1.5", "line=2.25", "line=3.75"],
+          "marketPeriods": ["half=1", null],
+          "priceNames": ["over", "under"]
+        }
+      ]
+    }
+  ],
+  "goalscorer": {
+    "status": "unavailable",
+    "evidence": "No SuperOddsType or field matching scorer/player markets in captured World Cup odds payloads for fixtures 18257739 and 18257865."
+  },
+  "assist": {
+    "status": "unavailable",
+    "evidence": "No assist market in odds payloads. Pre-match score snapshots only contain Action=comment and Action=coverage_update with empty Stats; no assister attribution fields present."
+  },
+  "streams": {
+    "odds": "connected (200 text/event-stream, heartbeat observed)",
+    "scores": "connected (200 text/event-stream, heartbeat observed)"
+  }
+}

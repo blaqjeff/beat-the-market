@@ -1,0 +1,226 @@
+// Beat the Market — identity + TxLINE feed storage.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AuthProvider {
+  email
+  solana
+}
+
+enum FeedStream {
+  odds
+  scores
+}
+
+enum FeedCursorStatus {
+  starting
+  connected
+  reconnecting
+  disconnected
+  error
+}
+
+enum MarketAvailability {
+  open
+  suspended
+  closed
+  stale
+  unknown
+}
+
+model User {
+  id          String   @id @default(cuid())
+  username    String   @unique
+  displayName String?
+  email       String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  identities       AuthIdentity[]
+  sessions         Session[]
+  emailMagicLinks  EmailMagicLink[]
+  walletChallenges WalletChallenge[]
+
+  @@index([createdAt])
+}
+
+model AuthIdentity {
+  id                String       @id @default(cuid())
+  userId            String
+  provider          AuthProvider
+  providerAccountId String
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model EmailMagicLink {
+  id         String    @id @default(cuid())
+  userId     String?
+  email      String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model WalletChallenge {
+  id         String    @id @default(cuid())
+  userId     String?
+  publicKey  String
+  nonce      String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([publicKey])
+  @@index([expiresAt])
+}
+
+model Participant {
+  id                 String   @id @default(cuid())
+  sourceParticipantId String  @unique
+  name               String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  homeFixtures Fixture[] @relation("HomeParticipant")
+  awayFixtures Fixture[] @relation("AwayParticipant")
+
+  @@index([name])
+}
+
+model Fixture {
+  id                  String   @id @default(cuid())
+  sourceFixtureId     String   @unique
+  competitionId       String?
+  competitionName     String?
+  fixtureGroupId      String?
+  homeParticipantId   String
+  awayParticipantId   String
+  participant1IsHome  Boolean  @default(true)
+  startsAt            DateTime
+  gameState           String?
+  lastSourceTimestamp BigInt?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  homeParticipant Participant @relation("HomeParticipant", fields: [homeParticipantId], references: [id])
+  awayParticipant Participant @relation("AwayParticipant", fields: [awayParticipantId], references: [id])
+  markets         Market[]
+  matchEvents     MatchEvent[]
+  oddsSnapshots   OddsSnapshot[]
+
+  @@index([competitionId])
+  @@index([startsAt])
+  @@index([gameState])
+}
+
+model Market {
+  id               String             @id @default(cuid())
+  fixtureId        String
+  marketKey        String             @unique
+  superOddsType    String
+  marketParameters String?
+  marketPeriod     String?
+  inRunning        Boolean            @default(false)
+  availability     MarketAvailability @default(unknown)
+  lastSourceTimestamp BigInt?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  fixture       Fixture        @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  oddsSnapshots OddsSnapshot[]
+
+  @@index([fixtureId])
+  @@index([superOddsType])
+  @@index([availability])
+}
+
+model OddsSnapshot {
+  id               String   @id @default(cuid())
+  fixtureId        String
+  marketId         String
+  messageId        String   @unique
+  bookmaker        String?
+  bookmakerId      Int?
+  priceNames       Json
+  prices           Json
+  pct              Json?
+  sourceTimestamp  BigInt
+  inRunning        Boolean  @default(false)
+  gameState        String?
+  rawPayload       Json
+  createdAt        DateTime @default(now())
+
+  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  market  Market  @relation(fields: [marketId], references: [id], onDelete: Cascade)
+
+  @@index([fixtureId, sourceTimestamp])
+  @@index([marketId, sourceTimestamp])
+}
+
+model MatchEvent {
+  id              String   @id @default(cuid())
+  fixtureId       String
+  sequence        Int
+  action          String
+  gameState       String?
+  sourceTimestamp BigInt?
+  stats           Json?
+  data            Json?
+  rawPayload      Json
+  createdAt       DateTime @default(now())
+
+  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+
+  @@unique([fixtureId, sequence, action])
+  @@index([fixtureId, sequence])
+  @@index([action])
+}
+
+model FeedCursor {
+  id               String           @id @default(cuid())
+  stream           FeedStream       @unique
+  status           FeedCursorStatus @default(starting)
+  lastEventId      String?
+  lastHeartbeatAt  DateTime?
+  lastMessageAt    DateTime?
+  lastError        String?
+  reconnectCount   Int              @default(0)
+  mode             String           @default("live")
+  updatedAt        DateTime         @updatedAt
+  createdAt        DateTime         @default(now())
+}

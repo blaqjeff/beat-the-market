@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Beat the Market
 
-## Getting Started
+A live World Cup prediction game powered by TxLINE consensus probabilities,
+scores, match events, and Solana-anchored validation proofs.
 
-First, run the development server:
+Fans receive a limited confidence-credit budget for each match. They can make
+pre-match and in-play calls at the current TxLINE probability, earn more points
+for correctly calling unlikely outcomes, and inspect a reproducible settlement
+receipt after the match.
+
+This is a free skill game. Confidence credits and points have no cash value.
+
+## Hackathon
+
+- Global track: Consumer and Fan Experiences
+- Regional track: TxODDS World Cup Hackathon Nigeria
+- Primary data source: TxLINE
+
+## Current status
+
+- **Phase 0 complete** — World Cup feed discovery, market catalogue, SSE probes,
+  validation proof fetch. Goalscorer/assist unavailable on current payloads.
+- **Phase 1 complete** — app shell, Postgres identity schema, email + wallet
+  auth (SendByte), health checks, CI workflow.
+- **Phase 2 complete** — TxLINE normalize/persist, SSE worker, replay, feed
+  health.
+- **Next: Phase 3** — pre-match confidence-credit game.
+
+## Local development
+
+### Prerequisites
+
+- Node.js 22+
+- Docker Desktop (for local Postgres)
+
+### Setup
 
 ```bash
+npm install
+cp .env.example .env.local
+# Set AUTH_SECRET to a long random value (openssl rand -base64 48)
+npm run db:up
+npm run db:migrate
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Sign in with:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Email magic link** — without `SENDBYTE_API_KEY`, the verify URL is printed
+  in the server log and returned in the API response during development.
+- **Phantom wallet** — signs a one-time challenge message. No private key is
+  ever requested or stored.
 
-## Learn More
+TxLINE activation (local only): [http://localhost:3000/setup/txline](http://localhost:3000/setup/txline)
 
-To learn more about Next.js, take a look at the following resources:
+### Checks
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Health endpoint: `GET /api/health`
 
-## Deploy on Vercel
+### Ingestion
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# Deterministic replay from captured fixtures (same path as live)
+npm run ingestion:replay -- 18257865 72
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Live SSE worker (odds + scores, reconnect with backoff)
+npm run ingestion:worker
+```
+
+### Environment
+
+Server-only secrets must never use `NEXT_PUBLIC_` names. See `.env.example` for:
+
+- `DATABASE_URL`, `AUTH_SECRET`, `APP_URL`
+- Optional `SENDBYTE_API_KEY` / `EMAIL_FROM` ([SendByte](https://docs.sendbyte.africa/))
+- TxLINE credentials and Solana RPC
+
+## Capture tooling
+
+```bash
+npm run txline:capture -- fixtures 72
+npm run txline:capture -- odds <fixtureId>
+npm run txline:capture -- scores <fixtureId>
+npm run txline:probe-streams -- odds 12
+npm run txline:probe-validation -- <fixtureId> <seq>
+```

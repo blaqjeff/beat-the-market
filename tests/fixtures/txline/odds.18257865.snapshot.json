@@ -1,0 +1,197 @@
+[
+  {
+    "FixtureId": 18257865,
+    "MessageId": "1838356673:00003:000831-10021-stab",
+    "Ts": 1784394029731,
+    "Bookmaker": "TXLineStablePriceDemargined",
+    "BookmakerId": 10021,
+    "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+    "GameState": null,
+    "InRunning": false,
+    "MarketParameters": null,
+    "MarketPeriod": null,
+    "PriceNames": [
+      "part1",
+      "draw",
+      "part2"
+    ],
+    "Prices": [
+      1911,
+      4283,
+      4110
+    ],
+    "Pct": [
+      "52.329",
+      "23.348",
+      "24.331"
+    ]
+  },
+  {
+    "FixtureId": 18257865,
+    "MessageId": "1838356673:00003:000832-10021-stab",
+    "Ts": 1784394029731,
+    "Bookmaker": "TXLineStablePriceDemargined",
+    "BookmakerId": 10021,
+    "SuperOddsType": "ASIANHANDICAP_PARTICIPANT_GOALS",
+    "GameState": null,
+    "InRunning": false,
+    "MarketParameters": "line=0",
+    "MarketPeriod": null,
+    "PriceNames": [
+      "part1",
+      "part2"
+    ],
+    "Prices": [
+      1476,
+      3099
+    ],
+    "Pct": [
+      "67.751",
+      "32.268"
+    ]
+  },
+  {
+    "FixtureId": 18257865,
+    "MessageId": "1838356673:00003:000835-10021-stab",
+    "Ts": 1784394029731,
+    "Bookmaker": "TXLineStablePriceDemargined",
+    "BookmakerId": 10021,
+    "SuperOddsType": "ASIANHANDICAP_PARTICIPANT_GOALS",
+    "GameState": null,
+    "InRunning": false,
+    "MarketParameters": "line=-0.25",
+    "MarketPeriod": null,
+    "PriceNames": [
+      "part1",
+      "part2"
+    ],
+    "Prices": [
+      1682,
+      2467
+    ],
+    "Pct": [
+      "NA",
+      "NA"
+    ]
+  },
+  {
+    "FixtureId": 18257865,
+    "MessageId": "1838356673:00003:000833-10021-stab",
+    "Ts": 1784394029731,
+    "Bookmaker": "TXLineStablePriceDemargined",
+    "BookmakerId": 10021,
+    "SuperOddsType": "ASIANHANDICAP_PARTICIPANT_GOALS",
+    "GameState": null,
+    "InRunning": false,
+    "MarketParameters": "line=0.25",
+    "MarketPeriod": null,
+    "PriceNames": [
+      "part1",
+      "part2"
+    ],
+    "Prices": [
+      1384,
+      3603
+    ],
+    "Pct": [
+      "NA",
+      "NA"
+    ]
+  },
+  {
+    "FixtureId": 18257865,
+    "MessageId": "1838356673:00003:000834-10021-stab",
+    "Ts": 1784394029731,
+    "Bookmaker": "TXLineStablePriceDemargined",
+    "BookmakerId": 10021,
+    "SuperOddsType": "ASIANHANDICAP_PARTICIPANT_GOALS",
+    "GameState": null,
+    "InRunning": false,
+    "MarketParameters": "line=0.5",
+    "MarketPeriod": null,
+    "PriceNames": [
+      "part1",
+      "part2"
+    ],
+    "Prices": [
+      1307,
+      4261
+    ],
+    "Pct": [
+      "76.511",
+      "23.469"
+    ]
+  },
+  {
+    "FixtureId": 18257865,
+    "MessageId": "1838356647:00003:000606-10021-stab",
+    "Ts": 1784394015923,
+    "Bookmaker": "TXLineStablePriceDemargined",
+    "BookmakerId": 10021,
+    "SuperOddsType": "OVERUNDER_PARTICIPANT_GOALS",
+    "GameState": null,
+    "InRunning": false,
+    "MarketParameters": "line=1.5",
+    "MarketPeriod": "half=1",
+    "PriceNames": [
+      "over",
+      "under"
+    ],
+    "Prices": [
+      2274,
+      1785
+    ],
+    "Pct": [
+      "43.975",
+      "56.022"
+    ]
+  },
+  {
+    "FixtureId": 18257865,
+    "MessageId": "1838356673:00003:000836-10021-stab",
+    "Ts": 1784394029731,
+    "Bookmaker": "TXLineStablePriceDemargined",
+    "BookmakerId": 10021,
+    "SuperOddsType": "OVERUNDER_PARTICIPANT_GOALS",
+    "GameState": null,
+    "InRunning": false,
+    "MarketParameters": "line=2.25",
+    "MarketPeriod": null,
+    "PriceNames": [
+      "over",
+      "under"
+    ],
+    "Prices": [
+      1347,
+      3878
+    ],
+    "Pct": [
+      "NA",
+      "NA"
+    ]
+  },
+  {
+    "FixtureId": 18257865,
+    "MessageId": "1838356673:00003:000837-10021-stab",
+    "Ts": 1784394029731,
+    "Bookmaker": "TXLineStablePriceDemargined",
+    "BookmakerId": 10021,
+    "SuperOddsType": "OVERUNDER_PARTICIPANT_GOALS",
+    "GameState": null,
+    "InRunning": false,
+    "MarketParameters": "line=3.75",
+    "MarketPeriod": null,
+    "PriceNames": [
+      "over",
+      "under"
+    ],
+    "Prices": [
+      2592,
+      1628
+    ],
+    "Pct": [
+      "NA",
+      "NA"
+    ]
+  }
+]

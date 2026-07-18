@@ -1,0 +1,42 @@
+[
+  {
+    "FixtureId": 18257739,
+    "Seq": 1,
+    "Ts": 1784149549864,
+    "GameState": "scheduled",
+    "Action": "comment",
+    "Stats": {},
+    "StartTime": 1784487600000,
+    "IsTeam": true,
+    "FixtureGroupId": 10115676,
+    "CompetitionId": 72,
+    "CountryId": 466,
+    "SportId": 1,
+    "Participant1IsHome": true,
+    "Participant2Id": 1489,
+    "Participant1Id": 3021,
+    "Id": 1,
+    "ConnectionId": 1139,
+    "Data": {}
+  },
+  {
+    "FixtureId": 18257739,
+    "Seq": 0,
+    "Ts": 1784149549858,
+    "GameState": "scheduled",
+    "Action": "coverage_update",
+    "Stats": {},
+    "StartTime": 1784487600000,
+    "IsTeam": true,
+    "FixtureGroupId": 10115676,
+    "CompetitionId": 72,
+    "CountryId": 466,
+    "SportId": 1,
+    "Participant1IsHome": true,
+    "Participant2Id": 1489,
+    "Participant1Id": 3021,
+    "Id": 0,
+    "ConnectionId": 1139,
+    "Data": {}
+  }
+]

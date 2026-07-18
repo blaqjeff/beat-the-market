@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: beat
+          POSTGRES_PASSWORD: beat
+          POSTGRES_DB: beat_the_market
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U beat -d beat_the_market"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://beat:beat@localhost:5432/beat_the_market?schema=public
+      AUTH_SECRET: ci-test-secret-at-least-32-characters-long
+      APP_URL: http://localhost:3000
+      TXLINE_NETWORK: mainnet
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Migrate
+        run: npm run db:migrate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build

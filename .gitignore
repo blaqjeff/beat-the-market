@@ -1,5 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
@@ -19,23 +17,50 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
+*.key
 
-# debug
+# logs and debug
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
 *.tsbuildinfo
+
+# env and secrets (commit only the example)
+.env
+.env.*
+!.env.example
+
+# vercel / local tooling
+.vercel
+.turbo
+.cursor/
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# typescript generated
 next-env.d.ts
+
+# prisma generated client
+/src/generated/
+
+# internal planning docs (not for public repo)
+/docs/
+AGENTS.md
+CLAUDE.md
+
+# local-only helpers and capture scratch
+scripts/ensure-local-env.mjs
+tmp/
+.temp/
+*.local.json
