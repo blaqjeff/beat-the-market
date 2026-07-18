@@ -1,0 +1,187 @@
+import "server-only";
+
+import { prisma } from "@/lib/db/prisma";
+import { ensureMatchCredits } from "@/lib/game/credits";
+import {
+  isSupportedPrematchMarket,
+  potentialPoints,
+  probabilityBpsFromPct,
+  multiplierMilliFromProbabilityBps,
+} from "@/lib/game/scoring";
+import { serverEnv } from "@/lib/env/server";
+import { AppError } from "@/lib/errors/app-error";
+import { logInfo } from "@/lib/logging/logger";
+
+function asStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.map(String) : [];
+}
+
+export interface PlaceCallInput {
+  userId: string;
+  fixtureId: string;
+  marketId: string;
+  outcomeKey: string;
+  credits: number;
+  idempotencyKey: string;
+}
+
+export async function placeCall(input: PlaceCallInput) {
+  if (!Number.isInteger(input.credits) || input.credits <= 0) {
+    throw new AppError("validation", "Credits must be a positive integer");
+  }
+  if (!input.idempotencyKey || input.idempotencyKey.length < 8) {
+    throw new AppError("validation", "Idempotency key is required");
+  }
+
+  const existing = await prisma().call.findUnique({
+    where: { idempotencyKey: input.idempotencyKey },
+  });
+  if (existing) {
+    if (existing.userId !== input.userId) {
+      throw new AppError("conflict", "Idempotency key belongs to another user");
+    }
+    return { call: existing, replayed: true as const };
+  }
+
+  await ensureMatchCredits(input.userId, input.fixtureId);
+  const env = serverEnv();
+
+  const call = await prisma().$transaction(async (tx) => {
+    const market = await tx.market.findUnique({
+      where: { id: input.marketId },
+      include: {
+        fixture: true,
+        oddsSnapshots: {
+          orderBy: { sourceTimestamp: "desc" },
+          take: 1,
+        },
+      },
+    });
+
+    if (!market || market.fixtureId !== input.fixtureId) {
+      throw new AppError("not_found", "Market not found for this fixture");
+    }
+
+    if (
+      !isSupportedPrematchMarket({
+        superOddsType: market.superOddsType,
+        inRunning: market.inRunning,
+        marketPeriod: market.marketPeriod,
+      })
+    ) {
+      throw new AppError("validation", "Market is not available for pre-match calls");
+    }
+
+    const replayMode = await tx.feedCursor.findFirst({
+      where: { mode: "replay" },
+    });
+
+    if (
+      market.availability === "suspended" ||
+      market.availability === "closed"
+    ) {
+      throw new AppError("conflict", `Market is ${market.availability}`);
+    }
+
+    const latest = market.oddsSnapshots[0];
+    if (!latest) {
+      throw new AppError("conflict", "No price is available for this market");
+    }
+
+    if (!replayMode) {
+      const ageMs = Date.now() - Number(latest.sourceTimestamp);
+      if (
+        market.availability === "stale" ||
+        ageMs > env.TXLINE_MAX_SNAPSHOT_AGE_MS
+      ) {
+        throw new AppError("conflict", "Market price is stale");
+      }
+    }
+
+    const priceNames = asStringArray(latest.priceNames);
+    const pctValues = asStringArray(latest.pct);
+    const outcomeIndex = priceNames.indexOf(input.outcomeKey);
+    if (outcomeIndex < 0) {
+      throw new AppError("validation", "Unknown outcome for this market");
+    }
+
+    const probabilityBps = probabilityBpsFromPct(pctValues[outcomeIndex] ?? "NA");
+    if (probabilityBps === null) {
+      throw new AppError("conflict", "Outcome probability is unavailable");
+    }
+
+    const multiplierMilli = multiplierMilliFromProbabilityBps(probabilityBps);
+    const points = potentialPoints(input.credits, multiplierMilli);
+
+    const account = await tx.matchCreditAccount.findUnique({
+      where: {
+        userId_fixtureId: {
+          userId: input.userId,
+          fixtureId: input.fixtureId,
+        },
+      },
+    });
+    if (!account) {
+      throw new AppError("internal", "Match credit account missing");
+    }
+    if (account.remainingCredits < input.credits) {
+      throw new AppError("conflict", "Insufficient match credits");
+    }
+
+    const updated = await tx.matchCreditAccount.updateMany({
+      where: {
+        id: account.id,
+        version: account.version,
+        remainingCredits: { gte: input.credits },
+      },
+      data: {
+        remainingCredits: account.remainingCredits - input.credits,
+        version: { increment: 1 },
+      },
+    });
+    if (updated.count !== 1) {
+      throw new AppError(
+        "conflict",
+        "Could not reserve credits; retry with a fresh balance"
+      );
+    }
+
+    const created = await tx.call.create({
+      data: {
+        userId: input.userId,
+        fixtureId: input.fixtureId,
+        marketId: market.id,
+        oddsSnapshotId: latest.id,
+        outcomeKey: input.outcomeKey,
+        credits: input.credits,
+        probabilityBps,
+        multiplierMilli,
+        potentialPoints: points,
+        sourceTimestamp: latest.sourceTimestamp,
+        status: "pending",
+        idempotencyKey: input.idempotencyKey,
+      },
+    });
+
+    await tx.creditLedgerEntry.create({
+      data: {
+        accountId: account.id,
+        callId: created.id,
+        kind: "spend",
+        amount: input.credits,
+        balanceAfter: account.remainingCredits - input.credits,
+      },
+    });
+
+    return created;
+  });
+
+  logInfo("game.call.placed", {
+    callId: call.id,
+    userId: input.userId,
+    fixtureId: input.fixtureId,
+    credits: input.credits,
+  });
+
+  return { call, replayed: false as const };
+}

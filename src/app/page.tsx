@@ -6,21 +6,38 @@ import { prisma } from "@/lib/db/prisma";
 
 export default async function Home() {
   let user: Awaited<ReturnType<typeof getCurrentUser>> = null;
-  let fixtureCount = 0;
-  let oddsCount = 0;
+  let fixtures: Array<{
+    sourceFixtureId: string;
+    home: string;
+    away: string;
+    startsAt: Date;
+    competitionName: string | null;
+  }> = [];
+
   try {
     user = await getCurrentUser();
   } catch {
     user = null;
   }
+
   try {
-    [fixtureCount, oddsCount] = await Promise.all([
-      prisma().fixture.count(),
-      prisma().oddsSnapshot.count(),
-    ]);
+    const rows = await prisma().fixture.findMany({
+      orderBy: { startsAt: "asc" },
+      include: {
+        homeParticipant: true,
+        awayParticipant: true,
+      },
+      take: 20,
+    });
+    fixtures = rows.map((row) => ({
+      sourceFixtureId: row.sourceFixtureId,
+      home: row.homeParticipant.name,
+      away: row.awayParticipant.name,
+      startsAt: row.startsAt,
+      competitionName: row.competitionName,
+    }));
   } catch {
-    fixtureCount = 0;
-    oddsCount = 0;
+    fixtures = [];
   }
 
   return (
@@ -46,12 +63,6 @@ export default async function Home() {
           >
             {user ? "View leaderboard" : "Start making calls"}
           </Link>
-          <Link
-            href="/leaderboard"
-            className="rounded-xl border border-[color:var(--line)] px-5 py-3 font-semibold text-[color:var(--chalk)] transition hover:border-[color:var(--signal)]"
-          >
-            How scoring works
-          </Link>
           {process.env.NODE_ENV !== "production" && (
             <Link
               href="/setup/txline"
@@ -63,44 +74,43 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="mt-10 grid gap-4 sm:grid-cols-3">
-        {[
-          {
-            title: "1,000 credits / match",
-            copy: "Non-monetary confidence budget. No deposits, no cash-out.",
-          },
-          {
-            title: "Priced by TxLINE",
-            copy: "Calls freeze the consensus probability at acceptance time.",
-          },
-          {
-            title: "Receipts after settle",
-            copy: "Every awarded point can be reproduced from stored inputs.",
-          },
-        ].map((item) => (
-          <article
-            key={item.title}
-            className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/40 p-5"
-          >
-            <h2 className="font-[family-name:var(--font-display)] text-lg tracking-wide text-[color:var(--chalk)]">
-              {item.title}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
-              {item.copy}
-            </p>
-          </article>
-        ))}
-      </section>
-
-      <section className="mt-10 rounded-2xl border border-dashed border-[color:var(--line)] px-6 py-10 text-center">
+      <section className="mt-10">
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">
-          Ingested feed
+          Matches
         </p>
-        <p className="mt-3 text-[color:var(--chalk)]">
-          {fixtureCount > 0
-            ? `${fixtureCount} fixtures · ${oddsCount} odds snapshots in Postgres`
-            : "Run npm run ingestion:replay or npm run ingestion:worker to load fixtures."}
-        </p>
+        {fixtures.length === 0 ? (
+          <div className="mt-4 rounded-2xl border border-dashed border-[color:var(--line)] px-6 py-10 text-center text-[color:var(--muted)]">
+            No fixtures ingested yet. Run{" "}
+            <code className="text-[color:var(--chalk)]">
+              npm run ingestion:replay -- 18257865 72
+            </code>
+            .
+          </div>
+        ) : (
+          <ul className="mt-4 grid gap-3">
+            {fixtures.map((fixture) => (
+              <li key={fixture.sourceFixtureId}>
+                <Link
+                  href={`/matches/${fixture.sourceFixtureId}`}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/40 px-5 py-4 transition hover:border-[color:var(--signal)]"
+                >
+                  <div>
+                    <p className="font-[family-name:var(--font-display)] text-lg tracking-wide text-[color:var(--chalk)]">
+                      {fixture.home} vs {fixture.away}
+                    </p>
+                    <p className="mt-1 text-sm text-[color:var(--muted)]">
+                      {fixture.competitionName ?? "World Cup"} ·{" "}
+                      {fixture.startsAt.toLocaleString()}
+                    </p>
+                  </div>
+                  <span className="font-mono text-xs uppercase tracking-[0.18em] text-[color:var(--signal)]">
+                    Open board
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </main>
   );

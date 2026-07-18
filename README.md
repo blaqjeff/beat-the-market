@@ -24,7 +24,8 @@ This is a free skill game. Confidence credits and points have no cash value.
   auth (SendByte), health checks, CI workflow.
 - **Phase 2 complete** — TxLINE normalize/persist, SSE worker, replay, feed
   health.
-- **Next: Phase 3** — pre-match confidence-credit game.
+- **Phase 3 complete** — pre-match credits, market board, atomic call placement.
+- **Next: Phase 4** — live match centre.
 
 ## Local development
 
