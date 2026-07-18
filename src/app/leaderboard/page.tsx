@@ -1,13 +1,12 @@
 import Link from "next/link";
 
+import { StandingRow } from "@/components/competition/StandingRow";
 import { getLeaderboard } from "@/lib/game/leaderboard";
 
 export const dynamic = "force-dynamic";
 
 export default async function LeaderboardPage() {
   const board = await getLeaderboard(50);
-  const balanced =
-    board.totals.ledgerPoints === board.totals.callPointsAwarded;
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
@@ -18,59 +17,30 @@ export default async function LeaderboardPage() {
         Leaderboard
       </h1>
       <p className="mt-4 max-w-2xl text-[color:var(--muted)]">
-        Rankings sum point ledger awards from settled calls. Open a profile to
-        trace every point to a settlement receipt.
-      </p>
-      <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
-        Tie-break: {board.tieBreak}
-      </p>
-      <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
-        Ledger {board.totals.ledgerPoints} pts · calls{" "}
-        {board.totals.callPointsAwarded} pts
-        {balanced ? " · balanced" : " · mismatch"}
+        Ranked by settled points. Open a profile to follow every score back to a
+        receipt.
       </p>
 
       {board.rows.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed border-[color:var(--line)] px-6 py-16 text-center text-[color:var(--muted)]">
-          No settled points yet. Finish a match and run settlement.
+          No points yet — place calls on a live board and wait for settlement.
         </div>
       ) : (
         <ol className="mt-10 space-y-3">
           {board.rows.map((row) => (
-            <li
-              key={row.userId}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/40 px-5 py-4"
-            >
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[color:var(--signal)]">
-                  #{row.rank}
-                </p>
-                <Link
-                  href={`/profile/${row.username}`}
-                  className="mt-1 block text-lg text-[color:var(--chalk)] hover:text-[color:var(--signal)]"
-                >
-                  {row.displayName}
-                </Link>
-                <p className="text-sm text-[color:var(--muted)]">
-                  @{row.username} · {row.wins}W-{row.losses}L
-                  {row.accuracyBps !== null
-                    ? ` · ${(row.accuracyBps / 100).toFixed(0)}%`
-                    : ""}
-                  {row.bestWinStreak > 0
-                    ? ` · best streak ${row.bestWinStreak}`
-                    : ""}
-                  {row.marketBeatingScore > 0
-                    ? ` · MB ${row.marketBeatingScore}`
-                    : ""}
-                </p>
-              </div>
-              <p className="font-[family-name:var(--font-display)] text-3xl tracking-wide text-[color:var(--chalk)]">
-                {row.points}
-              </p>
-            </li>
+            <StandingRow key={row.userId} row={row} />
           ))}
         </ol>
       )}
+
+      <details className="mt-8 max-w-xl text-sm text-[color:var(--muted)]">
+        <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-[0.16em] hover:text-[color:var(--chalk)]">
+          How ranking works
+        </summary>
+        <p className="mt-3 leading-6">
+          Points come from settled calls only. Ties break by: {board.tieBreak}.
+        </p>
+      </details>
 
       <p className="mt-10 text-sm text-[color:var(--muted)]">
         <Link href="/leagues" className="text-[color:var(--signal)] underline">

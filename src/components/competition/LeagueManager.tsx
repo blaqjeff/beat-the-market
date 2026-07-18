@@ -140,9 +140,9 @@ export function LeagueManager({ initialLeagues }: { initialLeagues: LeagueRow[] 
           Your leagues
         </h2>
         {leagues.length === 0 ? (
-          <p className="mt-3 text-sm text-[color:var(--muted)]">
+          <div className="mt-4 rounded-2xl border border-dashed border-[color:var(--line)] px-5 py-10 text-center text-sm text-[color:var(--muted)]">
             No leagues yet. Create one and share the invite code.
-          </p>
+          </div>
         ) : (
           <ul className="mt-4 space-y-3">
             {leagues.map((league) => (
@@ -153,10 +153,20 @@ export function LeagueManager({ initialLeagues }: { initialLeagues: LeagueRow[] 
                 >
                   <div>
                     <p className="text-[color:var(--chalk)]">{league.name}</p>
-                    <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
-                      {league.inviteCode} · {league.memberCount} members
-                      {league.isOwner ? " · owner" : ""}
-                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <span className="rounded-full border border-[color:var(--line)] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[color:var(--muted)]">
+                        {league.inviteCode}
+                      </span>
+                      <span className="rounded-full border border-[color:var(--line)] px-2.5 py-1 text-xs text-[color:var(--muted)]">
+                        {league.memberCount} member
+                        {league.memberCount === 1 ? "" : "s"}
+                      </span>
+                      {league.isOwner ? (
+                        <span className="rounded-full border border-[color:var(--signal)]/30 px-2.5 py-1 text-xs text-[color:var(--signal)]">
+                          Owner
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                   <span className="text-sm text-[color:var(--signal)]">Open</span>
                 </a>

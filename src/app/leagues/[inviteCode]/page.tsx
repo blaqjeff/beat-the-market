@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { StandingRow } from "@/components/competition/StandingRow";
 import { getLeagueByInviteCode } from "@/lib/game/leagues";
 
 export const dynamic = "force-dynamic";
@@ -37,15 +38,18 @@ export default async function LeagueDetailPage({
       <h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl tracking-wide text-[color:var(--chalk)]">
         {league.name}
       </h1>
-      <p className="mt-4 text-[color:var(--muted)]">
-        Owner @{league.owner.username} · {league.memberCount} members · invite{" "}
-        <span className="font-mono text-[color:var(--chalk)]">
-          {league.inviteCode}
+
+      <div className="mt-5 flex flex-wrap items-center gap-2">
+        <span className="rounded-full border border-[color:var(--line)] px-3 py-1 text-sm text-[color:var(--muted)]">
+          Owner @{league.owner.username}
         </span>
-      </p>
-      <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
-        Tie-break: {league.board.tieBreak}
-      </p>
+        <span className="rounded-full border border-[color:var(--line)] px-3 py-1 text-sm text-[color:var(--muted)]">
+          {league.memberCount} member{league.memberCount === 1 ? "" : "s"}
+        </span>
+        <span className="rounded-full border border-[color:var(--signal)]/30 bg-[color:var(--signal)]/10 px-3 py-1 font-mono text-sm tracking-wide text-[color:var(--signal)]">
+          Invite {league.inviteCode}
+        </span>
+      </div>
 
       {league.board.rows.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed border-[color:var(--line)] px-6 py-16 text-center text-[color:var(--muted)]">
@@ -54,37 +58,19 @@ export default async function LeagueDetailPage({
       ) : (
         <ol className="mt-10 space-y-3">
           {league.board.rows.map((row) => (
-            <li
-              key={row.userId}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/40 px-5 py-4"
-            >
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[color:var(--signal)]">
-                  #{row.rank}
-                </p>
-                <Link
-                  href={`/profile/${row.username}`}
-                  className="mt-1 block text-lg text-[color:var(--chalk)] hover:text-[color:var(--signal)]"
-                >
-                  {row.displayName}
-                </Link>
-                <p className="text-sm text-[color:var(--muted)]">
-                  {row.wins}W-{row.losses}L
-                  {row.accuracyBps !== null
-                    ? ` · ${(row.accuracyBps / 100).toFixed(0)}%`
-                    : ""}
-                  {row.currentWinStreak > 0
-                    ? ` · streak ${row.currentWinStreak}`
-                    : ""}
-                </p>
-              </div>
-              <p className="font-[family-name:var(--font-display)] text-3xl tracking-wide text-[color:var(--chalk)]">
-                {row.points}
-              </p>
-            </li>
+            <StandingRow key={row.userId} row={row} />
           ))}
         </ol>
       )}
+
+      <details className="mt-8 max-w-xl text-sm text-[color:var(--muted)]">
+        <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-[0.16em] hover:text-[color:var(--chalk)]">
+          How ranking works
+        </summary>
+        <p className="mt-3 leading-6">
+          Same rules as the global board. Ties break by: {league.board.tieBreak}.
+        </p>
+      </details>
 
       <p className="mt-10 text-sm text-[color:var(--muted)]">
         <Link href="/leagues" className="text-[color:var(--signal)] underline">

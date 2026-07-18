@@ -238,11 +238,16 @@ export async function getPublicShareCard(callId: string) {
     return null;
   }
 
+  const home = receipt.fixture.homeParticipant.name;
+  const away = receipt.fixture.awayParticipant.name;
+
   return {
     callId: receipt.callId,
     username: receipt.user.username,
     displayName: receipt.user.displayName ?? receipt.user.username,
-    match: `${receipt.fixture.homeParticipant.name} vs ${receipt.fixture.awayParticipant.name}`,
+    match: `${home} vs ${away}`,
+    home,
+    away,
     sourceFixtureId: receipt.fixture.sourceFixtureId,
     outcomeKey: receipt.outcomeKey,
     pointsAwarded: receipt.pointsAwarded,

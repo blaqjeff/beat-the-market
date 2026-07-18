@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { ShareButton } from "@/components/competition/ShareButton";
 import { getPublicShareCard } from "@/lib/game/leaderboard";
+import { formatMultiplier, outcomeLabel } from "@/lib/game/labels";
 import { serverEnv } from "@/lib/env/server";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export async function generateMetadata({
   const title = `${card.displayName} beat the market`;
   const description = `${card.match} · ${card.pointsAwarded} pts at ${(
     card.probabilityBps / 100
-  ).toFixed(1)}% · ${(card.multiplierMilli / 1000).toFixed(2)}x`;
+  ).toFixed(1)}% · ${formatMultiplier(card.multiplierMilli)}`;
   return {
     title,
     description,
@@ -62,8 +63,9 @@ export default async function ShareCallPage({
   const appUrl = serverEnv().APP_URL.replace(/\/$/, "");
   const shareUrl = `${appUrl}/share/calls/${card.callId}`;
   const probability = (card.probabilityBps / 100).toFixed(1);
-  const multiplier = (card.multiplierMilli / 1000).toFixed(2);
-  const shareText = `${card.displayName} took ${card.outcomeKey} on ${card.match} at ${probability}% (${multiplier}x) and banked ${card.pointsAwarded} pts on Beat the Market.`;
+  const multiplier = formatMultiplier(card.multiplierMilli);
+  const callSide = outcomeLabel(card.outcomeKey, card.home, card.away);
+  const shareText = `${card.displayName} called ${callSide} on ${card.match} at ${probability}% (${multiplier}) and banked ${card.pointsAwarded} pts on Beat the Market.`;
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
@@ -77,14 +79,39 @@ export default async function ShareCallPage({
 
       <section className="mt-8 rounded-[2rem] border border-[color:var(--line)] bg-[color:var(--panel)]/60 p-6 sm:p-8">
         <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[color:var(--muted)]">
-          @{card.username} · final {card.finalScore}
+          @{card.username}
+          <span className="mx-2">·</span>
+          Final {card.finalScore}
         </p>
         <p className="mt-4 font-[family-name:var(--font-display)] text-5xl tracking-wide text-[color:var(--chalk)]">
           {card.pointsAwarded} pts
         </p>
-        <p className="mt-3 text-[color:var(--muted)]">
-          {card.outcomeKey} · {probability}% · {multiplier}x
-        </p>
+
+        <dl className="mt-6 flex flex-wrap gap-2">
+          <div className="rounded-xl border border-[color:var(--line)] px-3 py-2.5">
+            <dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
+              Call
+            </dt>
+            <dd className="mt-1 text-sm text-[color:var(--chalk)]">{callSide}</dd>
+          </div>
+          <div className="rounded-xl border border-[color:var(--line)] px-3 py-2.5">
+            <dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
+              Price
+            </dt>
+            <dd className="mt-1 text-sm tabular-nums text-[color:var(--chalk)]">
+              {probability}%
+            </dd>
+          </div>
+          <div className="rounded-xl border border-[color:var(--line)] px-3 py-2.5">
+            <dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
+              Return
+            </dt>
+            <dd className="mt-1 text-sm tabular-nums text-[color:var(--chalk)]">
+              {multiplier}
+            </dd>
+          </div>
+        </dl>
+
         <p className="mt-6 text-sm text-[color:var(--muted)]">{card.narrative}</p>
         <div className="mt-8">
           <ShareButton
@@ -100,14 +127,11 @@ export default async function ShareCallPage({
           href={`/receipts/${card.callId}`}
           className="text-[color:var(--signal)] underline"
         >
-          Full receipt
+          View receipt
         </Link>
         {" · "}
-        <Link
-          href={`/profile/${card.username}`}
-          className="text-[color:var(--signal)] underline"
-        >
-          Profile
+        <Link href="/" className="text-[color:var(--signal)] underline">
+          Home
         </Link>
       </p>
     </main>

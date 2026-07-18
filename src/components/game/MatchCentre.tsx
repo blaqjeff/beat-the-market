@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { MatchCallsSheet } from "@/components/game/MatchCallsSheet";
+import {
+  availabilityLabel,
+  formatMultiplier,
+  marketLabel,
+  outcomeLabel,
+  phaseLabel,
+} from "@/lib/game/labels";
 
 interface Outcome {
   key: string;
@@ -83,43 +90,17 @@ interface MatchState {
   }>;
 }
 
-function formatMultiplier(milli: number | null) {
-  if (milli === null) return "—";
-  return `${(milli / 1000).toFixed(2)}x`;
-}
-
 function marketTitle(market: Market) {
-  const prefix = market.inRunning ? "Live · " : "";
-  if (market.superOddsType === "1X2_PARTICIPANT_RESULT") {
-    return `${prefix}Match result`;
-  }
-  if (market.superOddsType === "OVERUNDER_PARTICIPANT_GOALS") {
-    return `${prefix}Total goals ${market.marketParameters ?? ""}`.trim();
-  }
-  return `${prefix}${market.superOddsType}`;
-}
-
-function outcomeLabel(key: string, home: string, away: string): string {
-  if (key === "part1") return home;
-  if (key === "part2") return away;
-  if (key === "draw") return "Draw";
-  if (key === "over") return "Over";
-  if (key === "under") return "Under";
-  return key;
+  const base = marketLabel(market.superOddsType, market.marketParameters);
+  return market.inRunning ? `Live · ${base}` : base;
 }
 
 function formatDelta(deltaBps: number | null) {
   if (deltaBps === null || deltaBps === 0) return null;
   const points = (deltaBps / 100).toFixed(1);
-  return deltaBps > 0 ? `▲ ${points}` : `▼ ${Math.abs(Number(points)).toFixed(1)}`;
-}
-
-function phaseLabel(phase: string) {
-  if (phase === "in_play") return "In play";
-  if (phase === "prematch") return "Pre-match";
-  if (phase === "finished") return "Finished";
-  if (phase === "suspended") return "Suspended";
-  return "Status unknown";
+  return deltaBps > 0
+    ? `+${points}`
+    : `−${Math.abs(Number(points)).toFixed(1)}`;
 }
 
 function formatKickoff(iso: string) {
@@ -129,12 +110,6 @@ function formatKickoff(iso: string) {
     hour: "numeric",
     minute: "2-digit",
   });
-}
-
-function feedChipLabel(status: string, mode: string | null) {
-  const base = status.replaceAll("_", " ");
-  if (!mode) return base;
-  return `${base} · ${mode}`;
 }
 
 function HeroStat({ label, value }: { label: string; value: string }) {
@@ -150,6 +125,17 @@ function HeroStat({ label, value }: { label: string; value: string }) {
   );
 }
 
+function SlipStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
+        {label}
+      </p>
+      <p className="mt-1 text-sm tabular-nums text-[color:var(--chalk)]">{value}</p>
+    </div>
+  );
+}
+
 export function MatchCentre({ initialState }: { initialState: MatchState }) {
   const router = useRouter();
   const [state, setState] = useState(initialState);
@@ -159,9 +145,9 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
     outcomeKey: string;
   } | null>(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [lastRefreshAt, setLastRefreshAt] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [lastRefreshAt, setLastRefreshAt] = useState<number | null>(null);
 
   const selectedOutcome = useMemo(() => {
     if (!selected) return null;
@@ -176,6 +162,25 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
 
   const prematchMarkets = state.markets.filter((market) => !market.inRunning);
   const inPlayMarkets = state.markets.filter((market) => market.inRunning);
+  const showProjected =
+    state.live.phase === "in_play" ||
+    state.calls.some((call) => call.status === "pending");
+  const showSettled =
+    state.settledPoints > 0 || state.live.phase === "finished";
+
+  const sheetCalls = useMemo(
+    () =>
+      state.calls.map((call) => {
+        const market = state.markets.find((row) => row.id === call.marketId);
+        return {
+          ...call,
+          marketTitle: market
+            ? marketTitle(market)
+            : "Market",
+        };
+      }),
+    [state.calls, state.markets]
+  );
 
   async function refresh() {
     const response = await fetch(
@@ -185,13 +190,12 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
     if (!response.ok) return;
     const next = (await response.json()) as MatchState;
     setState(next);
-    setLastRefreshAt(new Date().toISOString());
+    setLastRefreshAt(Date.now());
   }
 
   useEffect(() => {
     let cancelled = false;
-    const tick = async () => {
-      if (document.visibilityState === "hidden") return;
+    async function poll() {
       try {
         const response = await fetch(
           `/api/matches/${state.fixture.sourceFixtureId}/state`,
@@ -201,15 +205,13 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
         const next = (await response.json()) as MatchState;
         if (!cancelled) {
           setState(next);
-          setLastRefreshAt(new Date().toISOString());
+          setLastRefreshAt(Date.now());
         }
       } catch {
-        // Keep last confirmed state across reconnect gaps.
+        // Keep last good frame while offline.
       }
-    };
-
-    const id = window.setInterval(tick, 3000);
-    void tick();
+    }
+    const id = window.setInterval(poll, 5000);
     return () => {
       cancelled = true;
       window.clearInterval(id);
@@ -217,14 +219,13 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
   }, [state.fixture.sourceFixtureId]);
 
   async function place() {
-    if (!selected || !selectedOutcome) return;
+    if (!selectedOutcome || !selected) return;
     setBusy(true);
     setError(null);
     setMessage(null);
     try {
       if (!state.signedIn) {
-        router.push("/login");
-        return;
+        throw new Error("Sign in to place a call");
       }
       if (state.live.callsBlocked) {
         throw new Error(state.live.blockReason ?? "Calls are blocked");
@@ -233,7 +234,6 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
         typeof crypto !== "undefined" && "randomUUID" in crypto
           ? crypto.randomUUID()
           : `${Date.now()}-${Math.random()}`;
-
       const response = await fetch("/api/calls", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -253,8 +253,9 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
         throw new Error(payload.error?.message ?? "Call failed");
       }
       setMessage(
-        `Call accepted for ${payload.call?.potentialPoints ?? selectedOutcome.potential} potential points.`
+        `Call locked for ${payload.call?.potentialPoints ?? selectedOutcome.potential} potential points.`
       );
+      setSelected(null);
       await refresh();
       router.refresh();
     } catch (caught) {
@@ -265,6 +266,19 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
   }
 
   function renderMarkets(title: string, rows: Market[], empty: string) {
+    if (rows.length === 0) {
+      return (
+        <section>
+          <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-wide text-[color:var(--chalk)]">
+            {title}
+          </h2>
+          <p className="mt-3 rounded-2xl border border-dashed border-[color:var(--line)] px-5 py-6 text-center text-sm text-[color:var(--muted)]">
+            {empty}
+          </p>
+        </section>
+      );
+    }
+
     return (
       <section className="grid gap-4">
         <div className="flex items-end justify-between gap-3">
@@ -275,12 +289,9 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
             {rows.length} market{rows.length === 1 ? "" : "s"}
           </span>
         </div>
-        {rows.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[color:var(--line)] px-6 py-8 text-center text-[color:var(--muted)]">
-            {empty}
-          </div>
-        ) : (
-          rows.map((market) => (
+        {rows.map((market) => {
+          const status = availabilityLabel(market.availability);
+          return (
             <article
               key={market.id}
               className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/40 p-5"
@@ -289,9 +300,11 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
                 <h3 className="font-[family-name:var(--font-display)] text-xl tracking-wide text-[color:var(--chalk)]">
                   {marketTitle(market)}
                 </h3>
-                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[color:var(--muted)]">
-                  {market.availability}
-                </span>
+                {status ? (
+                  <span className="rounded-full border border-[color:var(--line)] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
+                    {status}
+                  </span>
+                ) : null}
               </div>
               <div className="mt-4 grid gap-2 sm:grid-cols-3">
                 {market.outcomes.map((outcome) => {
@@ -315,7 +328,7 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
                           outcomeKey: outcome.key,
                         })
                       }
-                      className={`rounded-xl border px-4 py-3 text-left transition ${
+                      className={`rounded-xl border px-4 py-3.5 text-left transition ${
                         active
                           ? "border-[color:var(--signal)] bg-[color:var(--signal)]/10"
                           : "border-[color:var(--line)] hover:border-[color:var(--signal)]"
@@ -328,28 +341,42 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
                           state.fixture.away
                         )}
                       </p>
-                      <p className="mt-1 text-sm text-[color:var(--muted)]">
-                        {outcome.pct ?? "NA"}% ·{" "}
-                        {formatMultiplier(outcome.multiplierMilli)}
-                      </p>
-                      {delta && (
+                      <div className="mt-3 flex items-end justify-between gap-2">
+                        <div>
+                          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[color:var(--muted)]">
+                            Return
+                          </p>
+                          <p className="mt-0.5 text-lg tabular-nums text-[color:var(--signal)]">
+                            {formatMultiplier(outcome.multiplierMilli)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[color:var(--muted)]">
+                            Price
+                          </p>
+                          <p className="mt-0.5 text-sm tabular-nums text-[color:var(--chalk)]">
+                            {outcome.pct ?? "—"}%
+                          </p>
+                        </div>
+                      </div>
+                      {delta ? (
                         <p
-                          className={`mt-1 font-mono text-[10px] uppercase tracking-[0.14em] ${
+                          className={`mt-2 font-mono text-[10px] uppercase tracking-[0.12em] ${
                             (outcome.deltaBps ?? 0) > 0
                               ? "text-[color:var(--signal)]"
                               : "text-red-300"
                           }`}
                         >
-                          {delta}
+                          Move {delta}
                         </p>
-                      )}
+                      ) : null}
                     </button>
                   );
                 })}
               </div>
             </article>
-          ))
-        )}
+          );
+        })}
       </section>
     );
   }
@@ -397,9 +424,10 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
               label="Kickoff"
               value={formatKickoff(state.fixture.startsAt)}
             />
-            <HeroStat label="Settled" value={`${state.settledPoints} pts`} />
-            {state.live.phase === "in_play" ||
-            state.calls.some((call) => call.status === "pending") ? (
+            {showSettled ? (
+              <HeroStat label="Settled" value={`${state.settledPoints} pts`} />
+            ) : null}
+            {showProjected ? (
               <HeroStat
                 label="Projected"
                 value={`${state.projectedPoints} pts`}
@@ -407,28 +435,13 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
             ) : null}
           </dl>
 
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-            <span className="rounded-full border border-[color:var(--line)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
-              Odds {feedChipLabel(state.feed.odds.status, state.feed.odds.mode)}
-            </span>
-            <span className="rounded-full border border-[color:var(--line)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
-              Scores{" "}
-              {feedChipLabel(state.feed.scores.status, state.feed.scores.mode)}
-            </span>
-            {lastRefreshAt ? (
-              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]/70">
-                Updated {new Date(lastRefreshAt).toLocaleTimeString()}
-              </span>
-            ) : null}
-          </div>
-
           {state.live.callsBlocked && state.live.phase !== "finished" && (
-            <p className="mt-5 rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-200">
+            <p className="mt-5 rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-center text-sm text-red-200">
               {state.live.blockReason ?? "New calls are blocked"}
             </p>
           )}
           {!state.signedIn && (
-            <p className="mt-5 text-sm text-[color:var(--muted)]">
+            <p className="mt-5 text-center text-sm text-[color:var(--muted)]">
               <Link
                 href="/login"
                 className="text-[color:var(--signal)] underline"
@@ -438,27 +451,52 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
               to spend confidence credits on this match.
             </p>
           )}
+
+          <details className="mt-5 text-center">
+            <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)] hover:text-[color:var(--chalk)]">
+              Feed details
+              {lastRefreshAt
+                ? ` · updated ${new Date(lastRefreshAt).toLocaleTimeString()}`
+                : ""}
+            </summary>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+              <span className="rounded-full border border-[color:var(--line)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
+                Odds {state.feed.odds.status}
+                {state.feed.odds.mode ? ` · ${state.feed.odds.mode}` : ""}
+              </span>
+              <span className="rounded-full border border-[color:var(--line)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
+                Scores {state.feed.scores.status}
+                {state.feed.scores.mode ? ` · ${state.feed.scores.mode}` : ""}
+              </span>
+            </div>
+          </details>
         </div>
       </section>
 
-      {renderMarkets(
-        "In-play markets",
-        inPlayMarkets,
-        "No in-play markets yet. They appear when TxLINE publishes InRunning prices."
-      )}
+      {inPlayMarkets.length > 0 || state.live.phase === "in_play"
+        ? renderMarkets(
+            "In-play markets",
+            inPlayMarkets,
+            "No live prices on the board yet."
+          )
+        : null}
 
-      {renderMarkets(
-        "Pre-match markets",
-        prematchMarkets,
-        "No open pre-match markets. Run ingestion/replay first."
-      )}
+      {prematchMarkets.length > 0 || state.live.phase === "prematch"
+        ? renderMarkets(
+            "Pre-match markets",
+            prematchMarkets,
+            "Pre-match board is closed."
+          )
+        : null}
 
-      {state.goalscorer.status === "unavailable" && (
-        <p className="rounded-2xl border border-dashed border-[color:var(--line)] px-5 py-4 text-sm text-[color:var(--muted)]">
-          Goalscorer markets unavailable
-          {state.goalscorer.reason ? ` — ${state.goalscorer.reason}` : "."}
+      {inPlayMarkets.length === 0 &&
+      prematchMarkets.length === 0 &&
+      state.live.phase !== "in_play" &&
+      state.live.phase !== "prematch" ? (
+        <p className="rounded-2xl border border-dashed border-[color:var(--line)] px-5 py-8 text-center text-sm text-[color:var(--muted)]">
+          No open markets on this board.
         </p>
-      )}
+      ) : null}
 
       <section className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/50 p-5">
         <div className="flex flex-wrap items-end justify-between gap-3">
@@ -477,6 +515,7 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
             </p>
           ) : null}
         </div>
+
         <div className="mt-4 flex flex-wrap items-end gap-4">
           <label className="block">
             <span className="font-mono text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">
@@ -491,27 +530,34 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
               className="mt-2 w-36 rounded-xl border border-[color:var(--line)] bg-[color:var(--pitch)] px-4 py-3 text-[color:var(--chalk)] outline-none ring-[color:var(--signal)] focus:ring-2"
             />
           </label>
-          <div className="text-sm text-[color:var(--muted)]">
-            {selectedOutcome ? (
-              <>
-                Selected{" "}
-                <span className="text-[color:var(--chalk)]">
-                  {outcomeLabel(
-                    selectedOutcome.outcome.key,
-                    state.fixture.home,
-                    state.fixture.away
-                  )}
-                </span>{" "}
-                · potential{" "}
-                <span className="text-[color:var(--signal)]">
-                  {selectedOutcome.potential} pts
-                </span>
-                {selectedOutcome.market.inRunning ? " · live price" : ""}
-              </>
-            ) : (
-              "Pick an outcome"
-            )}
-          </div>
+
+          {selectedOutcome ? (
+            <div className="flex min-w-[14rem] flex-1 flex-wrap gap-5 rounded-xl border border-[color:var(--line)] bg-[color:var(--pitch)]/40 px-4 py-3">
+              <SlipStat
+                label="Call"
+                value={outcomeLabel(
+                  selectedOutcome.outcome.key,
+                  state.fixture.home,
+                  state.fixture.away
+                )}
+              />
+              <SlipStat
+                label="To win"
+                value={`${selectedOutcome.potential} pts`}
+              />
+              <SlipStat
+                label="Price"
+                value={`${selectedOutcome.outcome.pct ?? "—"}% · ${formatMultiplier(
+                  selectedOutcome.outcome.multiplierMilli
+                )}`}
+              />
+            </div>
+          ) : (
+            <p className="flex-1 text-sm text-[color:var(--muted)]">
+              Pick an outcome above to build your slip.
+            </p>
+          )}
+
           <button
             type="button"
             disabled={
@@ -538,20 +584,23 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
         </h2>
         {state.live.timeline.length === 0 ? (
           <p className="mt-3 text-sm text-[color:var(--muted)]">
-            Waiting for score events.
+            No score events yet.
           </p>
         ) : (
           <ul className="mt-4 space-y-3">
             {state.live.timeline.slice(0, 12).map((event) => (
               <li
                 key={`${event.sequence}-${event.action}`}
-                className="border-b border-[color:var(--line)] pb-3 text-sm text-[color:var(--muted)]"
+                className="border-b border-[color:var(--line)] pb-3"
               >
-                <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--signal)]">
-                  #{event.sequence}
-                  {event.matchMinute !== null ? ` · ${event.matchMinute}'` : ""}
-                </span>
-                <p className="mt-1 text-[color:var(--chalk)]">{event.summary}</p>
+                <div className="flex items-baseline gap-3">
+                  <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--signal)]">
+                    {event.matchMinute !== null ? `${event.matchMinute}'` : "—"}
+                  </span>
+                  <p className="text-sm text-[color:var(--chalk)]">
+                    {event.summary}
+                  </p>
+                </div>
               </li>
             ))}
           </ul>
@@ -560,7 +609,7 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
 
       {state.signedIn && (
         <MatchCallsSheet
-          calls={state.calls}
+          calls={sheetCalls}
           home={state.fixture.home}
           away={state.fixture.away}
           liveScore={state.live.score}

@@ -3,37 +3,17 @@ import Link from "next/link";
 import { ShareButton } from "@/components/competition/ShareButton";
 import { isRemarkableCall } from "@/lib/game/competition-stats";
 import { getReceipt } from "@/lib/game/leaderboard";
+import { marketLabel, outcomeLabel } from "@/lib/game/labels";
 import { serverEnv } from "@/lib/env/server";
 
 export const dynamic = "force-dynamic";
 
-function marketLabel(type: string, parameters: string | null) {
-  if (type === "1X2_PARTICIPANT_RESULT") return "Match result";
-  if (type === "OVERUNDER_PARTICIPANT_GOALS") {
-    return `Total goals${parameters ? ` (${parameters.replace("line=", "")})` : ""}`;
-  }
-  return type;
-}
-
-function outcomeLabel(
-  key: string,
-  home: string,
-  away: string
-): string {
-  if (key === "part1") return home;
-  if (key === "part2") return away;
-  if (key === "draw") return "Draw";
-  if (key === "over") return "Over";
-  if (key === "under") return "Under";
-  return key;
-}
-
 function proofStatusLabel(status: string) {
-  if (status === "pda_found") return "Verified against Solana";
+  if (status === "pda_found") return "Verified on Solana";
   if (status === "structure_ok") return "Proof attached";
   if (status === "fetched") return "Proof fetched";
   if (status === "failed") return "Proof failed";
-  return status;
+  return "Pending";
 }
 
 export default async function ReceiptPage({
@@ -91,45 +71,47 @@ export default async function ReceiptPage({
       <h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl tracking-wide text-[color:var(--chalk)]">
         {home} vs {away}
       </h1>
-      <p className="mt-4 text-lg text-[color:var(--muted)]">
-        You called <span className="text-[color:var(--chalk)]">{callSide}</span>{" "}
-        on {marketLabel(receipt.marketType, receipt.marketParameters)}. Final
-        score {receipt.finalHomeScore}–{receipt.finalAwayScore}
-        {winnerSide ? ` · settled ${winnerSide}` : ""}.
+      <p className="mt-3 font-[family-name:var(--font-display)] text-3xl tabular-nums tracking-wide text-[color:var(--chalk)]">
+        {receipt.finalHomeScore}–{receipt.finalAwayScore}
+      </p>
+      <p className="mt-4 text-[color:var(--muted)]">
+        Called <span className="text-[color:var(--chalk)]">{callSide}</span> on{" "}
+        {marketLabel(receipt.marketType, receipt.marketParameters)}
+        {winnerSide ? ` · market settled ${winnerSide}` : ""}.
       </p>
 
-      <section className="mt-8 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-[color:var(--line)] p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[color:var(--muted)]">
+      <section className="mt-8 flex flex-wrap gap-2">
+        <div className="min-w-[9.5rem] flex-1 rounded-xl border border-[color:var(--line)] bg-[color:var(--panel)]/40 px-4 py-3">
+          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
             Result
           </p>
-          <p className="mt-2 text-3xl text-[color:var(--chalk)]">{resultLabel}</p>
-          <p className="mt-2 text-sm text-[color:var(--muted)]">
-            {receipt.pointsAwarded} points awarded
+          <p className="mt-1 text-2xl text-[color:var(--chalk)]">{resultLabel}</p>
+          <p className="mt-1 text-sm tabular-nums text-[color:var(--muted)]">
+            {receipt.pointsAwarded} pts
           </p>
         </div>
-        <div className="rounded-2xl border border-[color:var(--line)] p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[color:var(--muted)]">
+        <div className="min-w-[9.5rem] flex-1 rounded-xl border border-[color:var(--line)] bg-[color:var(--panel)]/40 px-4 py-3">
+          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
             Your price
           </p>
-          <p className="mt-2 text-3xl text-[color:var(--chalk)]">
+          <p className="mt-1 text-2xl tabular-nums text-[color:var(--chalk)]">
             {probability}%
           </p>
-          <p className="mt-2 text-sm text-[color:var(--muted)]">
+          <p className="mt-1 text-sm text-[color:var(--muted)]">
             {multiplier}x · {receipt.credits} credits
           </p>
         </div>
-        <div className="rounded-2xl border border-[color:var(--line)] p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[color:var(--muted)]">
-            Verification
+        <div className="min-w-[9.5rem] flex-1 rounded-xl border border-[color:var(--line)] bg-[color:var(--panel)]/40 px-4 py-3">
+          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
+            Proof
           </p>
-          <p className="mt-2 text-xl text-[color:var(--chalk)]">
+          <p className="mt-1 text-lg text-[color:var(--chalk)]">
             {receipt.proof
               ? proofStatusLabel(receipt.proof.verifyStatus)
-              : "No proof yet"}
+              : "Pending"}
           </p>
-          <p className="mt-2 text-sm text-[color:var(--muted)]">
-            TxLINE score proof · Solana
+          <p className="mt-1 text-sm text-[color:var(--muted)]">
+            Details below
           </p>
         </div>
       </section>

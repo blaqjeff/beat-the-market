@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FeedStatusBanner } from "@/components/shell/FeedStatusBanner";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
+import { fixturePhasePill } from "@/lib/game/labels";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +69,7 @@ export default async function Home() {
           Beat the Market
         </h1>
         <p className="animate-rise-delay mt-6 max-w-2xl text-lg leading-8 text-[color:var(--muted)]">
-          Spend confidence credits on TxLINE consensus prices. Call the result,
+          Spend confidence credits on live consensus prices. Call the result,
           chase the total, and prove you can out-read the market as the match
           moves.
         </p>
@@ -100,9 +101,6 @@ export default async function Home() {
               Open boards
             </h2>
           </div>
-          <p className="text-sm text-[color:var(--muted)]">
-            Priced by TxLINE · settled with on-chain proofs
-          </p>
         </div>
 
         {fixtures.length === 0 ? (
@@ -111,30 +109,48 @@ export default async function Home() {
           </div>
         ) : (
           <ul className="mt-4 grid gap-3">
-            {fixtures.map((fixture) => (
-              <li key={fixture.sourceFixtureId}>
-                <Link
-                  href={`/matches/${fixture.sourceFixtureId}`}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/40 px-5 py-4 transition hover:border-[color:var(--signal)]"
-                >
-                  <div>
-                    <p className="font-[family-name:var(--font-display)] text-lg tracking-wide text-[color:var(--chalk)]">
-                      {fixture.home} vs {fixture.away}
-                    </p>
-                    <p className="mt-1 text-sm text-[color:var(--muted)]">
-                      {fixture.competitionName ?? "World Cup"} ·{" "}
-                      {fixture.startsAt.toLocaleString()}
-                      {fixture.gameState
-                        ? ` · ${fixture.gameState.replaceAll("_", " ")}`
-                        : ""}
-                    </p>
-                  </div>
-                  <span className="font-mono text-xs uppercase tracking-[0.18em] text-[color:var(--signal)]">
-                    Open board
-                  </span>
-                </Link>
-              </li>
-            ))}
+            {fixtures.map((fixture) => {
+              const phase = fixturePhasePill(fixture.gameState);
+              const kickoff = fixture.startsAt.toLocaleString(undefined, {
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+              });
+              return (
+                <li key={fixture.sourceFixtureId}>
+                  <Link
+                    href={`/matches/${fixture.sourceFixtureId}`}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/40 px-5 py-4 transition hover:border-[color:var(--signal)]"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-[family-name:var(--font-display)] text-lg tracking-wide text-[color:var(--chalk)]">
+                          {fixture.home} vs {fixture.away}
+                        </p>
+                        <span
+                          className={`rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.14em] ${
+                            phase === "Live"
+                              ? "border-[color:var(--signal)]/40 text-[color:var(--signal)]"
+                              : "border-[color:var(--line)] text-[color:var(--muted)]"
+                          }`}
+                        >
+                          {phase}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-[color:var(--muted)]">
+                        {fixture.competitionName ?? "World Cup"}
+                        <span className="mx-2 text-[color:var(--line)]">·</span>
+                        Kickoff {kickoff}
+                      </p>
+                    </div>
+                    <span className="font-mono text-xs uppercase tracking-[0.18em] text-[color:var(--signal)]">
+                      Open
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

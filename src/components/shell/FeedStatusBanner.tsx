@@ -18,32 +18,31 @@ export async function FeedStatusBanner() {
     return null;
   }
 
-  const live = cursors.filter((cursor) => cursor.status === "connected");
   const reconnecting = cursors.filter(
     (cursor) => cursor.status === "reconnecting" || cursor.status === "error"
   );
   const replay = cursors.some((cursor) => cursor.mode === "replay");
 
-  let label = "Feed idle";
+  // Healthy live feed — stay quiet. Only surface demo or degraded states.
+  let label: string | null = null;
   let tone = "text-[color:var(--muted)] border-[color:var(--line)]";
 
   if (reconnecting.length > 0) {
-    label = `Feed reconnecting (${reconnecting.map((c) => c.stream).join(", ")})`;
+    label = "Prices are reconnecting — boards may lag briefly";
     tone = "text-amber-200 border-amber-800/60 bg-amber-950/30";
   } else if (staleMarkets > 0) {
-    label = `${staleMarkets} market${staleMarkets === 1 ? "" : "s"} marked stale`;
+    label = "Some prices are updating — refresh if a board looks off";
     tone = "text-amber-200 border-amber-800/60 bg-amber-950/30";
   } else if (replay) {
-    label = "Demo feed — TxLINE replay data";
-    tone = "text-[color:var(--signal)] border-[color:var(--line)]";
-  } else if (live.length > 0) {
-    label = "Live TxLINE feed connected";
+    label = "Demo board — replay prices for testing";
     tone = "text-[color:var(--signal)] border-[color:var(--line)]";
   }
 
+  if (!label) return null;
+
   return (
     <div
-      className={`mb-6 rounded-xl border px-4 py-3 font-mono text-xs uppercase tracking-[0.18em] ${tone}`}
+      className={`mb-6 rounded-xl border px-4 py-3 text-center text-sm ${tone}`}
     >
       {label}
     </div>

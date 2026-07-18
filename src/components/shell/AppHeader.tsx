@@ -29,7 +29,7 @@ export async function AppHeader() {
                 Beat the Market
               </span>
               <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.2em] text-[color:var(--muted)]">
-                TxLINE priced
+                Live priced calls
               </span>
             </span>
           </Link>

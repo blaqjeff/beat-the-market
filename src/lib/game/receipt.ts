@@ -1,4 +1,5 @@
 import type { MarketResolution } from "@/lib/game/resolve-markets";
+import { marketLabel, outcomeLabel } from "@/lib/game/labels";
 
 export function buildSettlementNarrative(input: {
   home: string;
@@ -15,33 +16,29 @@ export function buildSettlementNarrative(input: {
   multiplierMilli: number;
   resolution: MarketResolution;
 }): string {
-  const scoreline = `${input.home} ${input.finalHomeScore}-${input.finalAwayScore} ${input.away}`;
-  const marketLabel =
-    input.marketType === "1X2_PARTICIPANT_RESULT"
-      ? "match result"
-      : `totals ${input.marketParameters ?? ""}`.trim();
-  const quote = `${(input.probabilityBps / 100).toFixed(2)}% → ${(
-    input.multiplierMilli / 1000
-  ).toFixed(2)}x on ${input.credits} credits`;
+  const callSide = outcomeLabel(input.outcomeKey, input.home, input.away);
+  const market = marketLabel(input.marketType, input.marketParameters);
+  const scoreline = `${input.finalHomeScore}–${input.finalAwayScore}`;
+  const winner =
+    input.resolution.status === "decided"
+      ? outcomeLabel(input.resolution.winningOutcomeKey, input.home, input.away)
+      : null;
 
   if (input.result === "void") {
     const reason =
       input.resolution.status === "void"
         ? input.resolution.reason
         : "Market voided";
-    return `Void on ${marketLabel} for ${scoreline}. ${reason}. ${input.credits} credits refunded. Quote was ${quote}.`;
+    return `Void on ${market} · called ${callSide} · final ${scoreline}. ${reason}. ${input.credits} credits refunded.`;
   }
-
-  const winner =
-    input.resolution.status === "decided"
-      ? input.resolution.winningOutcomeKey
-      : "n/a";
 
   if (input.result === "won") {
-    return `Won ${input.pointsAwarded} pts on ${marketLabel} (${input.outcomeKey}). Final ${scoreline}; settled outcome ${winner}. Quote ${quote}.`;
+    return `Called ${callSide} on ${market} · won ${input.pointsAwarded} pts · final ${scoreline}.`;
   }
 
-  return `Lost on ${marketLabel} (${input.outcomeKey}). Final ${scoreline}; settled outcome ${winner}. Quote ${quote}; 0 pts awarded.`;
+  return `Called ${callSide} on ${market} · lost · final ${scoreline}${
+    winner ? ` (${winner})` : ""
+  }.`;
 }
 
 export function receiptInputs(input: {

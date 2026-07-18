@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { formatMultiplier, outcomeLabel } from "@/lib/game/labels";
+
 type CallsTab = "open" | "settled";
 
 type CallRow = {
@@ -23,20 +25,8 @@ type CallRow = {
   hasReceipt: boolean;
   finalHomeScore: number | null;
   finalAwayScore: number | null;
+  marketTitle?: string;
 };
-
-function outcomeLabel(key: string, home: string, away: string): string {
-  if (key === "part1") return home;
-  if (key === "part2") return away;
-  if (key === "draw") return "Draw";
-  if (key === "over") return "Over";
-  if (key === "under") return "Under";
-  return key;
-}
-
-function formatMultiplier(milli: number) {
-  return `${(milli / 1000).toFixed(2)}x`;
-}
 
 function resultTone(result: string | null, status: string) {
   if (status === "pending") return "border-[color:var(--signal)]/40 text-[color:var(--signal)]";
@@ -89,8 +79,13 @@ function CallCard({
           <p className="font-[family-name:var(--font-display)] text-xl tracking-wide text-[color:var(--chalk)]">
             {outcomeLabel(call.outcomeKey, home, away)}
           </p>
+          {call.marketTitle ? (
+            <p className="mt-0.5 text-xs text-[color:var(--muted)]">
+              {call.marketTitle}
+            </p>
+          ) : null}
           <p className="mt-1 text-sm text-[color:var(--muted)]">
-            {call.inRunningAtCall ? "In-play call" : "Pre-match call"}
+            {call.inRunningAtCall ? "In-play" : "Pre-match"}
             {scoreAtCall ? ` · at call ${scoreAtCall}` : ""}
             {call.matchMinuteAtCall !== null ? ` · ${call.matchMinuteAtCall}'` : ""}
           </p>
