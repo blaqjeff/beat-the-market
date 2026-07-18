@@ -163,7 +163,7 @@ function CallCard({
               href={`/share/calls/${call.id}`}
               className="rounded-lg border border-[color:var(--line)] px-3 py-2 text-sm font-semibold text-[color:var(--chalk)]"
             >
-              Share card
+              PnL card
             </Link>
           ) : null}
         </div>

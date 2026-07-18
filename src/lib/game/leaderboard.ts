@@ -245,6 +245,7 @@ export async function getPublicShareCard(callId: string) {
     away,
     sourceFixtureId: receipt.fixture.sourceFixtureId,
     outcomeKey: receipt.outcomeKey,
+    credits: receipt.credits,
     pointsAwarded: receipt.pointsAwarded,
     probabilityBps: receipt.probabilityBps,
     multiplierMilli: receipt.multiplierMilli,

@@ -121,22 +121,22 @@ export default async function ReceiptPage({
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--signal)]">
-                {remarkable ? "Remarkable call" : "Share card"}
+                {remarkable ? "Remarkable PnL card" : "PnL share card"}
               </p>
               <p className="mt-2 text-sm text-[color:var(--muted)]">
-                Open a public card or share the link — no private account data.
+                Download a meme-style result card as PNG, or share it.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <Link
                 href={`/share/calls/${receipt.callId}`}
-                className="rounded-xl border border-[color:var(--line)] px-4 py-2 text-sm font-semibold text-[color:var(--chalk)] transition hover:border-[color:var(--signal)]"
+                className="rounded-xl bg-[color:var(--signal)] px-4 py-2 text-sm font-semibold text-[color:var(--ink)] transition hover:brightness-110"
               >
-                View card
+                Open PnL card
               </Link>
               <ShareButton
                 title="Beat the Market"
-                text={`${receipt.user.displayName ?? receipt.user.username} banked ${receipt.pointsAwarded} pts on Beat the Market.`}
+                text={`${receipt.user.displayName ?? receipt.user.username} banked +${receipt.pointsAwarded} pts on Beat the Market.`}
                 url={shareUrl}
               />
             </div>
