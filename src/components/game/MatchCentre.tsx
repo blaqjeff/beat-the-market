@@ -139,11 +139,11 @@ function feedChipLabel(status: string, mode: string | null) {
 
 function HeroStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-[color:var(--line)]/80 bg-[color:var(--pitch)]/40 px-3 py-2.5">
+    <div className="min-w-0 rounded-xl border border-[color:var(--line)]/80 bg-[color:var(--pitch)]/40 px-3 py-2.5 sm:px-4">
       <dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
         {label}
       </dt>
-      <dd className="mt-1 text-sm tabular-nums text-[color:var(--chalk)]">
+      <dd className="mt-1 truncate text-sm tabular-nums text-[color:var(--chalk)] sm:text-base">
         {value}
       </dd>
     </div>
@@ -392,16 +392,24 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
             </div>
           </div>
 
-          <dl className="mt-6 flex flex-wrap gap-2">
+          <dl
+            className={`mt-6 grid gap-2 ${
+              state.projectedPoints > 0
+                ? "grid-cols-3"
+                : "grid-cols-2"
+            }`}
+          >
             <HeroStat
               label="Kickoff"
               value={formatKickoff(state.fixture.startsAt)}
             />
             <HeroStat label="Settled" value={`${state.settledPoints} pts`} />
-            <HeroStat
-              label="Projected"
-              value={`${state.projectedPoints} pts`}
-            />
+            {state.projectedPoints > 0 ? (
+              <HeroStat
+                label="Projected"
+                value={`${state.projectedPoints} pts`}
+              />
+            ) : null}
           </dl>
 
           <div className="mt-5 flex flex-wrap items-center gap-2">
