@@ -137,15 +137,13 @@ function feedChipLabel(status: string, mode: string | null) {
   return `${base} · ${mode}`;
 }
 
-function HeroStat({ label, value }: { label: string; value: string }) {
+function HeroMeta({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-[color:var(--line)]/80 bg-[color:var(--pitch)]/50 px-4 py-3">
-      <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
+    <div className="flex items-baseline gap-2">
+      <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
         {label}
       </dt>
-      <dd className="mt-1.5 text-lg tabular-nums text-[color:var(--chalk)]">
-        {value}
-      </dd>
+      <dd className="text-sm tabular-nums text-[color:var(--chalk)]">{value}</dd>
     </div>
   );
 }
@@ -392,23 +390,18 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
             </div>
           </div>
 
-          <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <HeroStat
+          <dl className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-[color:var(--line)]/70 pt-4">
+            <HeroMeta
               label="Kickoff"
               value={formatKickoff(state.fixture.startsAt)}
             />
-            <HeroStat
-              label="Credits"
-              value={`${state.credits.remainingCredits}/${state.credits.startingCredits}`}
-            />
-            <HeroStat
-              label="Settled"
-              value={`${state.settledPoints} pts`}
-            />
-            <HeroStat
-              label="Projected"
-              value={`${state.projectedPoints} pts`}
-            />
+            <HeroMeta label="Settled" value={`${state.settledPoints} pts`} />
+            {state.live.phase !== "finished" || state.projectedPoints > 0 ? (
+              <HeroMeta
+                label="Projected"
+                value={`${state.projectedPoints} pts`}
+              />
+            ) : null}
           </dl>
 
           <div className="mt-5 flex flex-wrap items-center gap-2">
@@ -465,13 +458,26 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
       )}
 
       <section className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/50 p-5">
-        <h2 className="font-[family-name:var(--font-display)] text-xl tracking-wide text-[color:var(--chalk)]">
-          Place call
-        </h2>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 className="font-[family-name:var(--font-display)] text-xl tracking-wide text-[color:var(--chalk)]">
+            Place call
+          </h2>
+          {state.signedIn ? (
+            <p className="font-mono text-xs uppercase tracking-[0.14em] text-[color:var(--muted)]">
+              Balance{" "}
+              <span className="tabular-nums text-[color:var(--chalk)]">
+                {state.credits.remainingCredits}
+              </span>
+              <span className="text-[color:var(--muted)]">
+                /{state.credits.startingCredits}
+              </span>
+            </p>
+          ) : null}
+        </div>
         <div className="mt-4 flex flex-wrap items-end gap-4">
           <label className="block">
             <span className="font-mono text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">
-              Credits
+              Stake credits
             </span>
             <input
               type="number"
