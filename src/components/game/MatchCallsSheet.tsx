@@ -213,9 +213,7 @@ export function MatchCallsSheet({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`fixed bottom-5 right-5 z-40 flex items-center justify-center rounded-full bg-[color:var(--signal)] text-[color:var(--ink)] shadow-[0_12px_40px_rgba(0,0,0,0.45)] transition hover:brightness-110 ${
-          hasOpenCalls ? "h-16 w-16" : "h-16 min-w-16 px-4"
-        }`}
+        className="fixed bottom-5 right-5 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-[color:var(--signal)] text-[color:var(--ink)] shadow-[0_12px_40px_rgba(0,0,0,0.45)] transition hover:brightness-110"
         aria-label={
           hasOpenCalls
             ? `Your calls, ${openCalls.length} open`
@@ -232,8 +230,9 @@ export function MatchCallsSheet({
             </span>
           </span>
         ) : (
-          <span className="max-w-[4.5rem] text-center font-mono text-[10px] font-semibold uppercase leading-tight tracking-[0.12em]">
-            Your calls
+          <span className="flex flex-col items-center px-1 text-center font-mono text-[9px] font-semibold uppercase leading-tight tracking-[0.1em]">
+            <span>Your</span>
+            <span>calls</span>
           </span>
         )}
       </button>
