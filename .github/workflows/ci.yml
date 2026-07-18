@@ -39,8 +39,7 @@ jobs:
           cache: npm
 
       - name: Install
-        # Prefer install over ci while optional native/wasm deps settle across npm versions.
-        run: npm install --no-audit --no-fund
+        run: npm ci
 
       - name: Migrate
         run: npm run db:migrate
