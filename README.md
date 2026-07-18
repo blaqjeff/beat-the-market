@@ -66,8 +66,9 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Sign in with:
 
-- **Email magic link** — without `SENDBYTE_API_KEY`, the verify URL is printed
-  in the server log and returned in the API response during development.
+- **Email magic link** — in development, if SendByte is unset *or fails*, the
+  verify URL is returned in the login UI and logged to the server console. You
+  can click it directly; no inbox required.
 - **Phantom wallet** — signs a one-time challenge message. No private key is
   ever requested or stored.
 

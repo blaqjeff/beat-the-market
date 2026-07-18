@@ -39,16 +39,33 @@ export async function requestEmailSignIn(rawEmail: string) {
   const link = verifyUrl.toString();
 
   if (hasEmailDelivery()) {
-    await sendTransactionalEmail({
-      to: email,
-      subject: "Your Beat the Market sign-in link",
-      text: `Sign in to Beat the Market:\n\n${link}\n\nThis link expires in 15 minutes.`,
-      html: `<p>Sign in to Beat the Market:</p><p><a href="${link}">${link}</a></p><p>This link expires in 15 minutes.</p>`,
-      tags: ["auth", "magic-link"],
-      idempotencyKey: `magic-link:${magicLink.id}`,
-    });
-    logInfo("auth.email.sent", { email, provider: "sendbyte" });
-    return { delivered: true as const };
+    try {
+      await sendTransactionalEmail({
+        to: email,
+        subject: "Your Beat the Market sign-in link",
+        text: `Sign in to Beat the Market:\n\n${link}\n\nThis link expires in 15 minutes.`,
+        html: `<p>Sign in to Beat the Market:</p><p><a href="${link}">${link}</a></p><p>This link expires in 15 minutes.</p>`,
+        tags: ["auth", "magic-link"],
+        idempotencyKey: `magic-link:${magicLink.id}`,
+      });
+      logInfo("auth.email.sent", { email, provider: "sendbyte" });
+      return { delivered: true as const };
+    } catch (error) {
+      // Local/dev must stay usable when SendByte is misconfigured or down.
+      if (serverEnv().NODE_ENV === "production") {
+        throw error;
+      }
+      logWarn("auth.email.provider_failed_dev_fallback", {
+        email,
+        error: error instanceof Error ? error.message : "unknown",
+        verifyUrl: link,
+      });
+      return {
+        delivered: false as const,
+        deliveryError: "Email provider failed; use the local sign-in link.",
+        devVerifyUrl: link,
+      };
+    }
   }
 
   if (serverEnv().NODE_ENV === "production") {

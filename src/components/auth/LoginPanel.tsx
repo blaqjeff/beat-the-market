@@ -51,6 +51,7 @@ export function LoginPanel({
       });
       const payload = (await response.json()) as {
         delivered?: boolean;
+        deliveryError?: string;
         devVerifyUrl?: string;
         error?: { message?: string };
       };
@@ -59,7 +60,10 @@ export function LoginPanel({
       }
       if (payload.devVerifyUrl) {
         setDevLink(payload.devVerifyUrl);
-        setMessage("Dev mode: email provider not configured. Use the link below.");
+        setMessage(
+          payload.deliveryError ??
+            "Dev mode: email provider not configured. Use the link below."
+        );
       } else {
         setMessage("Check your email for a sign-in link.");
       }
