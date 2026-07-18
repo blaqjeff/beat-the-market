@@ -82,6 +82,8 @@ model User {
   calls            Call[]
   pointLedger      PointLedgerEntry[]
   receipts         SettlementReceipt[]
+  ownedLeagues     League[]       @relation("LeagueOwner")
+  leagueMemberships LeagueMember[]
 
   @@index([createdAt])
 }
@@ -421,4 +423,33 @@ model ScoreValidationProof {
   @@index([sourceFixtureId])
   @@index([verifyStatus])
   @@index([dailyScoresPda])
+}
+
+model League {
+  id          String   @id @default(cuid())
+  name        String
+  inviteCode  String   @unique
+  ownerId     String
+  isPrivate   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner   User           @relation("LeagueOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members LeagueMember[]
+
+  @@index([ownerId])
+  @@index([createdAt])
+}
+
+model LeagueMember {
+  id        String   @id @default(cuid())
+  leagueId  String
+  userId    String
+  joinedAt  DateTime @default(now())
+
+  league League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([leagueId, userId])
+  @@index([userId])
 }

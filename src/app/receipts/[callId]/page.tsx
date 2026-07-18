@@ -1,6 +1,9 @@
 import Link from "next/link";
 
+import { ShareButton } from "@/components/competition/ShareButton";
+import { isRemarkableCall } from "@/lib/game/competition-stats";
 import { getReceipt } from "@/lib/game/leaderboard";
+import { serverEnv } from "@/lib/env/server";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +33,14 @@ export default async function ReceiptPage({
 
   const multiplier = (receipt.multiplierMilli / 1000).toFixed(2);
   const probability = (receipt.probabilityBps / 100).toFixed(2);
+  const remarkable = isRemarkableCall({
+    result: receipt.result,
+    probabilityBps: receipt.probabilityBps,
+    multiplierMilli: receipt.multiplierMilli,
+    pointsAwarded: receipt.pointsAwarded,
+  });
+  const appUrl = serverEnv().APP_URL.replace(/\/$/, "");
+  const shareUrl = `${appUrl}/share/calls/${receipt.callId}`;
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
@@ -41,6 +52,21 @@ export default async function ReceiptPage({
         {receipt.fixture.awayParticipant.name}
       </h1>
       <p className="mt-4 text-[color:var(--muted)]">{receipt.narrative}</p>
+      {remarkable && (
+        <div className="mt-6">
+          <ShareButton
+            title="Beat the Market"
+            text={`${receipt.user.displayName ?? receipt.user.username} banked ${receipt.pointsAwarded} pts on Beat the Market.`}
+            url={shareUrl}
+          />
+          <p className="mt-2 text-xs text-[color:var(--muted)]">
+            Public share card:{" "}
+            <Link href={`/share/calls/${receipt.callId}`} className="underline">
+              /share/calls/{receipt.callId}
+            </Link>
+          </p>
+        </div>
+      )}
 
       <section className="mt-8 grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-[color:var(--line)] p-5">

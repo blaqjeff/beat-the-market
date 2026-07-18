@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 const links = [
   { href: "/", label: "Matches" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/leagues", label: "Leagues" },
 ];
 
 export async function AppHeader() {
