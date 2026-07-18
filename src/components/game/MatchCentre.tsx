@@ -139,11 +139,11 @@ function feedChipLabel(status: string, mode: string | null) {
 
 function HeroStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-w-0 rounded-xl border border-[color:var(--line)]/80 bg-[color:var(--pitch)]/40 px-3 py-2.5 sm:px-4">
+    <div className="w-[9.75rem] rounded-xl border border-[color:var(--line)]/80 bg-[color:var(--pitch)]/40 px-3 py-2.5">
       <dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
         {label}
       </dt>
-      <dd className="mt-1 truncate text-sm tabular-nums text-[color:var(--chalk)] sm:text-base">
+      <dd className="mt-1 truncate text-sm tabular-nums text-[color:var(--chalk)]">
         {value}
       </dd>
     </div>
@@ -392,19 +392,14 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
             </div>
           </div>
 
-          <dl
-            className={`mt-6 grid gap-2 ${
-              state.projectedPoints > 0
-                ? "grid-cols-3"
-                : "grid-cols-2"
-            }`}
-          >
+          <dl className="mt-6 flex flex-wrap justify-center gap-2">
             <HeroStat
               label="Kickoff"
               value={formatKickoff(state.fixture.startsAt)}
             />
             <HeroStat label="Settled" value={`${state.settledPoints} pts`} />
-            {state.projectedPoints > 0 ? (
+            {state.live.phase === "in_play" ||
+            state.calls.some((call) => call.status === "pending") ? (
               <HeroStat
                 label="Projected"
                 value={`${state.projectedPoints} pts`}
@@ -412,7 +407,7 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
             ) : null}
           </dl>
 
-          <div className="mt-5 flex flex-wrap items-center gap-2">
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
             <span className="rounded-full border border-[color:var(--line)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
               Odds {feedChipLabel(state.feed.odds.status, state.feed.odds.mode)}
             </span>
@@ -427,7 +422,7 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
             ) : null}
           </div>
 
-          {state.live.callsBlocked && (
+          {state.live.callsBlocked && state.live.phase !== "finished" && (
             <p className="mt-5 rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-200">
               {state.live.blockReason ?? "New calls are blocked"}
             </p>
