@@ -122,6 +122,34 @@ function phaseLabel(phase: string) {
   return "Status unknown";
 }
 
+function formatKickoff(iso: string) {
+  return new Date(iso).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function feedChipLabel(status: string, mode: string | null) {
+  const base = status.replaceAll("_", " ");
+  if (!mode) return base;
+  return `${base} · ${mode}`;
+}
+
+function HeroStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-[color:var(--line)]/80 bg-[color:var(--pitch)]/50 px-4 py-3">
+      <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
+        {label}
+      </dt>
+      <dd className="mt-1.5 text-lg tabular-nums text-[color:var(--chalk)]">
+        {value}
+      </dd>
+    </div>
+  );
+}
+
 export function MatchCentre({ initialState }: { initialState: MatchState }) {
   const router = useRouter();
   const [state, setState] = useState(initialState);
@@ -328,56 +356,93 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-[2rem] border border-[color:var(--line)] bg-[color:var(--panel)]/70 p-6 sm:p-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-[0.22em] text-[color:var(--signal)]">
+      <section className="relative overflow-hidden rounded-[2rem] border border-[color:var(--line)] bg-[color:var(--panel)]/80">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(200,241,53,0.08),transparent_55%)]"
+        />
+        <div className="relative p-6 sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[color:var(--signal)]">
               {state.fixture.competitionName ?? "World Cup"}
             </p>
-            <h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl tracking-wide text-[color:var(--chalk)] sm:text-5xl">
-              {state.fixture.home} vs {state.fixture.away}
-            </h1>
-          </div>
-          <div className="rounded-2xl border border-[color:var(--line)] px-5 py-3 text-right">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[color:var(--muted)]">
+            <p className="rounded-full border border-[color:var(--line)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
               {phaseLabel(state.live.phase)}
               {state.live.clock.display ? ` · ${state.live.clock.display}` : ""}
             </p>
-            <p className="mt-1 font-[family-name:var(--font-display)] text-4xl tracking-wide text-[color:var(--chalk)]">
-              {state.live.score.home} – {state.live.score.away}
-            </p>
           </div>
+
+          <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
+            <div className="min-w-0 text-right">
+              <p className="font-[family-name:var(--font-display)] text-2xl leading-tight tracking-wide text-[color:var(--chalk)] sm:text-4xl">
+                {state.fixture.home}
+              </p>
+            </div>
+            <div className="px-2 text-center sm:px-4">
+              <p className="font-[family-name:var(--font-display)] text-5xl tabular-nums tracking-wide text-[color:var(--chalk)] sm:text-6xl">
+                {state.live.score.home}
+                <span className="mx-1 text-[color:var(--muted)] sm:mx-2">–</span>
+                {state.live.score.away}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="font-[family-name:var(--font-display)] text-2xl leading-tight tracking-wide text-[color:var(--chalk)] sm:text-4xl">
+                {state.fixture.away}
+              </p>
+            </div>
+          </div>
+
+          <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <HeroStat
+              label="Kickoff"
+              value={formatKickoff(state.fixture.startsAt)}
+            />
+            <HeroStat
+              label="Credits"
+              value={`${state.credits.remainingCredits}/${state.credits.startingCredits}`}
+            />
+            <HeroStat
+              label="Settled"
+              value={`${state.settledPoints} pts`}
+            />
+            <HeroStat
+              label="Projected"
+              value={`${state.projectedPoints} pts`}
+            />
+          </dl>
+
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-[color:var(--line)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
+              Odds {feedChipLabel(state.feed.odds.status, state.feed.odds.mode)}
+            </span>
+            <span className="rounded-full border border-[color:var(--line)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
+              Scores{" "}
+              {feedChipLabel(state.feed.scores.status, state.feed.scores.mode)}
+            </span>
+            {lastRefreshAt ? (
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]/70">
+                Updated {new Date(lastRefreshAt).toLocaleTimeString()}
+              </span>
+            ) : null}
+          </div>
+
+          {state.live.callsBlocked && (
+            <p className="mt-5 rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-200">
+              {state.live.blockReason ?? "New calls are blocked"}
+            </p>
+          )}
+          {!state.signedIn && (
+            <p className="mt-5 text-sm text-[color:var(--muted)]">
+              <Link
+                href="/login"
+                className="text-[color:var(--signal)] underline"
+              >
+                Sign in
+              </Link>{" "}
+              to spend confidence credits on this match.
+            </p>
+          )}
         </div>
-
-        <p className="mt-4 text-[color:var(--muted)]">
-          Kickoff {new Date(state.fixture.startsAt).toLocaleString()} · credits{" "}
-          {state.credits.remainingCredits}/{state.credits.startingCredits} ·
-          projected {state.projectedPoints} pts · settled {state.settledPoints}{" "}
-          pts
-        </p>
-        <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
-          Feed odds {state.feed.odds.status}
-          {state.feed.odds.mode ? `/${state.feed.odds.mode}` : ""} · scores{" "}
-          {state.feed.scores.status}
-          {state.feed.scores.mode ? `/${state.feed.scores.mode}` : ""}
-          {lastRefreshAt
-            ? ` · refreshed ${new Date(lastRefreshAt).toLocaleTimeString()}`
-            : ""}
-        </p>
-
-        {state.live.callsBlocked && (
-          <p className="mt-4 rounded-xl border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-200">
-            {state.live.blockReason ?? "New calls are blocked"}
-          </p>
-        )}
-        {!state.signedIn && (
-          <p className="mt-4 text-sm text-[color:var(--muted)]">
-            <Link href="/login" className="text-[color:var(--signal)] underline">
-              Sign in
-            </Link>{" "}
-            to spend confidence credits on this match.
-          </p>
-        )}
       </section>
 
       {renderMarkets(

@@ -213,7 +213,7 @@ export function MatchCallsSheet({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-[color:var(--signal)] text-[color:var(--ink)] shadow-[0_12px_40px_rgba(0,0,0,0.45)] transition hover:brightness-110"
+        className="fixed bottom-5 right-5 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[color:var(--signal)] text-[color:var(--ink)] shadow-[0_10px_28px_rgba(0,0,0,0.4)] transition hover:brightness-110"
         aria-label={
           hasOpenCalls
             ? `Your calls, ${openCalls.length} open`
@@ -222,15 +222,15 @@ export function MatchCallsSheet({
       >
         {hasOpenCalls ? (
           <span className="flex flex-col items-center leading-none">
-            <span className="font-[family-name:var(--font-display)] text-xl">
+            <span className="font-[family-name:var(--font-display)] text-lg">
               {openCalls.length}
             </span>
-            <span className="mt-1 font-mono text-[9px] uppercase tracking-[0.14em]">
+            <span className="mt-0.5 font-mono text-[8px] uppercase tracking-[0.12em]">
               Open
             </span>
           </span>
         ) : (
-          <span className="flex flex-col items-center px-1 text-center font-mono text-[9px] font-semibold uppercase leading-tight tracking-[0.1em]">
+          <span className="flex flex-col items-center px-0.5 text-center font-mono text-[8px] font-semibold uppercase leading-tight tracking-[0.08em]">
             <span>Your</span>
             <span>calls</span>
           </span>
