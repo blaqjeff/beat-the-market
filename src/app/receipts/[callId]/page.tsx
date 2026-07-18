@@ -150,36 +150,35 @@ export default async function ReceiptPage({
         </summary>
         <div className="mt-4 space-y-4 text-sm text-[color:var(--muted)]">
           <p>
-            This section is for hackathon judges / auditors. It shows that your
-            points came from frozen call inputs plus a TxLINE validation proof
-            anchored to Solana.
+            Your points were calculated from the price locked when you placed
+            the call, then checked against a TxLINE final-score proof published
+            to Solana.
           </p>
           {receipt.proof ? (
             <ul className="space-y-2">
               <li>
                 Status:{" "}
                 <span className="text-[color:var(--chalk)]">
-                  {receipt.proof.verifyStatus}
+                  {proofStatusLabel(receipt.proof.verifyStatus)}
                 </span>
               </li>
-              <li>{receipt.proof.verifyDetail}</li>
               <li className="break-all font-mono text-[11px]">
-                Program: {receipt.proof.solanaProgramId}
+                Solana program: {receipt.proof.solanaProgramId}
               </li>
               <li className="break-all font-mono text-[11px]">
-                Daily scores PDA: {receipt.proof.dailyScoresPda}
+                Daily scores account: {receipt.proof.dailyScoresPda}
               </li>
               <li className="font-mono text-[11px]">
-                Epoch day {receipt.proof.epochDay} · seq {receipt.proof.sequence}{" "}
-                · {receipt.proof.network}
+                {receipt.proof.network} · epoch day {receipt.proof.epochDay} ·
+                score sequence {receipt.proof.sequence}
               </li>
             </ul>
           ) : (
-            <p>No validation proof was attached to this receipt.</p>
+            <p>No score proof is attached to this receipt yet.</p>
           )}
           <details className="rounded-xl border border-dashed border-[color:var(--line)] p-4">
             <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-[0.16em]">
-              Raw settlement inputs
+              Settlement inputs
             </summary>
             <pre className="mt-3 overflow-x-auto text-xs">
               {JSON.stringify(receipt.inputsJson, null, 2)}
