@@ -137,13 +137,15 @@ function feedChipLabel(status: string, mode: string | null) {
   return `${base} · ${mode}`;
 }
 
-function HeroMeta({ label, value }: { label: string; value: string }) {
+function HeroStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline gap-2">
-      <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
+    <div className="rounded-xl border border-[color:var(--line)]/80 bg-[color:var(--pitch)]/40 px-3 py-2.5">
+      <dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
         {label}
       </dt>
-      <dd className="text-sm tabular-nums text-[color:var(--chalk)]">{value}</dd>
+      <dd className="mt-1 text-sm tabular-nums text-[color:var(--chalk)]">
+        {value}
+      </dd>
     </div>
   );
 }
@@ -390,18 +392,16 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
             </div>
           </div>
 
-          <dl className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-[color:var(--line)]/70 pt-4">
-            <HeroMeta
+          <dl className="mt-6 flex flex-wrap gap-2">
+            <HeroStat
               label="Kickoff"
               value={formatKickoff(state.fixture.startsAt)}
             />
-            <HeroMeta label="Settled" value={`${state.settledPoints} pts`} />
-            {state.live.phase !== "finished" || state.projectedPoints > 0 ? (
-              <HeroMeta
-                label="Projected"
-                value={`${state.projectedPoints} pts`}
-              />
-            ) : null}
+            <HeroStat label="Settled" value={`${state.settledPoints} pts`} />
+            <HeroStat
+              label="Projected"
+              value={`${state.projectedPoints} pts`}
+            />
           </dl>
 
           <div className="mt-5 flex flex-wrap items-center gap-2">
