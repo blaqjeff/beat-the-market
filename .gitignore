@@ -63,4 +63,6 @@ CLAUDE.md
 scripts/ensure-local-env.mjs
 tmp/
 .temp/
+.tmp-lock/
+node_modules_old/
 *.local.json

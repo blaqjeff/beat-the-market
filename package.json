@@ -10,7 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "postinstall": "prisma generate",
+    "postinstall": "npx prisma generate",
     "db:up": "docker compose up -d",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",

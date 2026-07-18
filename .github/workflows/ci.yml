@@ -29,7 +29,6 @@ jobs:
       AUTH_SECRET: ci-test-secret-at-least-32-characters-long
       APP_URL: http://localhost:3000
       TXLINE_NETWORK: mainnet
-      NODE_ENV: test
 
     steps:
       - uses: actions/checkout@v4
@@ -40,7 +39,8 @@ jobs:
           cache: npm
 
       - name: Install
-        run: npm ci
+        # Prefer install over ci while optional native/wasm deps settle across npm versions.
+        run: npm install --no-audit --no-fund
 
       - name: Migrate
         run: npm run db:migrate
@@ -52,6 +52,8 @@ jobs:
         run: npm run typecheck
 
       - name: Test
+        env:
+          NODE_ENV: test
         run: npm test
 
       - name: Build
