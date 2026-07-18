@@ -51,21 +51,22 @@ export function LoginPanel({
       });
       const payload = (await response.json()) as {
         delivered?: boolean;
-        deliveryError?: string;
         devVerifyUrl?: string;
-        error?: { message?: string };
+        error?: { message?: string; details?: { code?: string } };
       };
       if (!response.ok) {
         throw new Error(payload.error?.message ?? "Unable to send sign-in email");
       }
-      if (payload.devVerifyUrl) {
+      if (payload.delivered) {
+        setMessage("Check your inbox for a sign-in link.");
+      } else if (payload.devVerifyUrl) {
+        // Only returned when SENDBYTE_API_KEY is unset in development.
         setDevLink(payload.devVerifyUrl);
         setMessage(
-          payload.deliveryError ??
-            "Dev mode: email provider not configured. Use the link below."
+          "No email provider configured. Set SENDBYTE_API_KEY, or use the local link below."
         );
       } else {
-        setMessage("Check your email for a sign-in link.");
+        setMessage("Check your inbox for a sign-in link.");
       }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Sign-in failed");

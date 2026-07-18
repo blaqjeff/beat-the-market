@@ -52,33 +52,36 @@ describe("requestEmailSignIn", () => {
     });
   });
 
-  it("falls back to a local magic link when SendByte fails in development", async () => {
+  it("sends through the email provider when configured", async () => {
+    hasEmailDelivery.mockReturnValue(true);
+    sendTransactionalEmail.mockResolvedValue({ id: "em_1", sandbox: false });
+
+    const result = await requestEmailSignIn("fan@example.com");
+
+    expect(result).toEqual({ delivered: true });
+    expect(sendTransactionalEmail).toHaveBeenCalledOnce();
+  });
+
+  it("surfaces provider failures instead of inventing a page link", async () => {
     hasEmailDelivery.mockReturnValue(true);
     sendTransactionalEmail.mockRejectedValue(
-      new AppError("upstream", "Failed to send email via SendByte")
+      new AppError("upstream", "SendByte domain_not_verified: Domain not verified")
     );
+
+    await expect(requestEmailSignIn("fan@example.com")).rejects.toMatchObject({
+      code: "upstream",
+      message: expect.stringContaining("SendByte"),
+    });
+  });
+
+  it("returns a local link only when no provider key is configured in development", async () => {
+    hasEmailDelivery.mockReturnValue(false);
 
     const result = await requestEmailSignIn("fan@example.com");
 
     expect(result.delivered).toBe(false);
     expect(result).toMatchObject({
-      deliveryError: expect.stringContaining("Email provider failed"),
       devVerifyUrl: expect.stringContaining("/api/auth/email/verify"),
     });
-  });
-
-  it("still surfaces provider failures in production", async () => {
-    hasEmailDelivery.mockReturnValue(true);
-    serverEnv.mockReturnValue({
-      NODE_ENV: "production",
-      APP_URL: "https://example.com",
-    });
-    sendTransactionalEmail.mockRejectedValue(
-      new AppError("upstream", "Failed to send email via SendByte")
-    );
-
-    await expect(requestEmailSignIn("fan@example.com")).rejects.toBeInstanceOf(
-      AppError
-    );
   });
 });
