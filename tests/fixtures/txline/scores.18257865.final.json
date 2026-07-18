@@ -1,0 +1,25 @@
+[
+  {
+    "FixtureId": 18257865,
+    "Seq": 20,
+    "Ts": 1784412000000,
+    "GameState": "finished",
+    "Action": "game_finalised",
+    "Stats": { "1": 2, "2": 1 },
+    "StartTime": 1784408400000,
+    "IsTeam": true,
+    "FixtureGroupId": 10115771,
+    "CompetitionId": 72,
+    "CountryId": 466,
+    "SportId": 1,
+    "Participant1IsHome": true,
+    "Participant2Id": 1888,
+    "Participant1Id": 1999,
+    "Id": 20,
+    "ConnectionId": 1181,
+    "StatusId": 100,
+    "Minutes": 90,
+    "Clock": { "running": false, "seconds": 5400 },
+    "Data": { "Minutes": 90, "Clock": { "running": false, "seconds": 5400 } }
+  }
+]

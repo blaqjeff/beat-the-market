@@ -57,6 +57,7 @@ interface MatchState {
     remainingCredits: number;
   };
   projectedPoints: number;
+  settledPoints: number;
   signedIn: boolean;
   markets: Market[];
   calls: Array<{
@@ -67,11 +68,14 @@ interface MatchState {
     probabilityBps: number;
     multiplierMilli: number;
     potentialPoints: number;
+    pointsAwarded: number;
     status: string;
+    result: string | null;
     homeScoreAtCall: number | null;
     awayScoreAtCall: number | null;
     matchMinuteAtCall: number | null;
     inRunningAtCall: boolean;
+    hasReceipt: boolean;
   }>;
 }
 
@@ -344,7 +348,8 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
         <p className="mt-4 text-[color:var(--muted)]">
           Kickoff {new Date(state.fixture.startsAt).toLocaleString()} · credits{" "}
           {state.credits.remainingCredits}/{state.credits.startingCredits} ·
-          projected {state.projectedPoints} pts
+          projected {state.projectedPoints} pts · settled {state.settledPoints}{" "}
+          pts
         </p>
         <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
           Feed odds {state.feed.odds.status}
@@ -491,6 +496,7 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
                 <span className="text-[color:var(--chalk)]">
                   {call.outcomeKey} · {call.credits} credits
                   {call.inRunningAtCall ? " · live" : " · pre-match"}
+                  {call.result ? ` · ${call.result}` : ""}
                 </span>
                 <span className="text-[color:var(--muted)]">
                   {call.homeScoreAtCall !== null && call.awayScoreAtCall !== null
@@ -500,7 +506,21 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
                     ? ` · ${call.matchMinuteAtCall}'`
                     : ""}{" "}
                   · {formatMultiplier(call.multiplierMilli)} ·{" "}
-                  {call.potentialPoints} pts · {call.status}
+                  {call.status === "pending"
+                    ? `${call.potentialPoints} pts potential`
+                    : `${call.pointsAwarded} pts`}{" "}
+                  · {call.status}
+                  {call.hasReceipt ? (
+                    <>
+                      {" · "}
+                      <Link
+                        href={`/receipts/${call.id}`}
+                        className="text-[color:var(--signal)] underline"
+                      >
+                        receipt
+                      </Link>
+                    </>
+                  ) : null}
                 </span>
               </li>
             ))}

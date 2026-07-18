@@ -138,12 +138,15 @@ export async function getMatchState(sourceFixtureId: string, userId?: string) {
     probabilityBps: number;
     multiplierMilli: number;
     potentialPoints: number;
+    pointsAwarded: number;
     status: string;
+    result: string | null;
     homeScoreAtCall: number | null;
     awayScoreAtCall: number | null;
     matchMinuteAtCall: number | null;
     gameStateAtCall: string | null;
     inRunningAtCall: boolean;
+    hasReceipt: boolean;
     createdAt: string;
   }> = [];
 
@@ -155,6 +158,7 @@ export async function getMatchState(sourceFixtureId: string, userId?: string) {
     };
     const rows = await prisma().call.findMany({
       where: { userId, fixtureId: fixture.id },
+      include: { receipt: { select: { id: true } } },
       orderBy: { createdAt: "desc" },
     });
     calls = rows.map((row) => ({
@@ -165,12 +169,15 @@ export async function getMatchState(sourceFixtureId: string, userId?: string) {
       probabilityBps: row.probabilityBps,
       multiplierMilli: row.multiplierMilli,
       potentialPoints: row.potentialPoints,
+      pointsAwarded: row.pointsAwarded,
       status: row.status,
+      result: row.result,
       homeScoreAtCall: row.homeScoreAtCall,
       awayScoreAtCall: row.awayScoreAtCall,
       matchMinuteAtCall: row.matchMinuteAtCall,
       gameStateAtCall: row.gameStateAtCall,
       inRunningAtCall: row.inRunningAtCall,
+      hasReceipt: Boolean(row.receipt),
       createdAt: row.createdAt.toISOString(),
     }));
   }
@@ -178,6 +185,7 @@ export async function getMatchState(sourceFixtureId: string, userId?: string) {
   const projectedPoints = calls
     .filter((call) => call.status === "pending")
     .reduce((sum, call) => sum + call.potentialPoints, 0);
+  const settledPoints = calls.reduce((sum, call) => sum + call.pointsAwarded, 0);
 
   return {
     fixture: {
@@ -216,6 +224,7 @@ export async function getMatchState(sourceFixtureId: string, userId?: string) {
       remainingCredits: STARTING_MATCH_CREDITS,
     },
     projectedPoints,
+    settledPoints,
     signedIn: Boolean(userId),
     markets,
     calls,

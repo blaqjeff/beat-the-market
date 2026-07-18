@@ -17,6 +17,7 @@
     "db:studio": "prisma studio",
     "ingestion:worker": "tsx --require ./scripts/polyfill-server-only.cjs scripts/ingestion/worker.ts",
     "ingestion:replay": "tsx --require ./scripts/polyfill-server-only.cjs scripts/ingestion/replay.ts",
+    "settlement:run": "tsx --require ./scripts/polyfill-server-only.cjs scripts/settlement/run.ts",
     "txline:capture": "tsx scripts/txline/capture.ts",
     "txline:probe-streams": "tsx scripts/txline/probe-streams.ts",
     "txline:probe-validation": "tsx scripts/txline/probe-validation.ts"
