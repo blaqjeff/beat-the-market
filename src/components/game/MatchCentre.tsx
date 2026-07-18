@@ -78,6 +78,8 @@ interface MatchState {
     matchMinuteAtCall: number | null;
     inRunningAtCall: boolean;
     hasReceipt: boolean;
+    finalHomeScore: number | null;
+    finalAwayScore: number | null;
   }>;
 }
 
@@ -487,6 +489,8 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
           calls={state.calls}
           home={state.fixture.home}
           away={state.fixture.away}
+          liveScore={state.live.score}
+          matchFinished={state.live.phase === "finished"}
         />
       )}
     </div>

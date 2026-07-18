@@ -147,6 +147,8 @@ export async function getMatchState(sourceFixtureId: string, userId?: string) {
     gameStateAtCall: string | null;
     inRunningAtCall: boolean;
     hasReceipt: boolean;
+    finalHomeScore: number | null;
+    finalAwayScore: number | null;
     createdAt: string;
   }> = [];
 
@@ -158,7 +160,11 @@ export async function getMatchState(sourceFixtureId: string, userId?: string) {
     };
     const rows = await prisma().call.findMany({
       where: { userId, fixtureId: fixture.id },
-      include: { receipt: { select: { id: true } } },
+      include: {
+        receipt: {
+          select: { id: true, finalHomeScore: true, finalAwayScore: true },
+        },
+      },
       orderBy: { createdAt: "desc" },
     });
     calls = rows.map((row) => ({
@@ -178,6 +184,8 @@ export async function getMatchState(sourceFixtureId: string, userId?: string) {
       gameStateAtCall: row.gameStateAtCall,
       inRunningAtCall: row.inRunningAtCall,
       hasReceipt: Boolean(row.receipt),
+      finalHomeScore: row.receipt?.finalHomeScore ?? null,
+      finalAwayScore: row.receipt?.finalAwayScore ?? null,
       createdAt: row.createdAt.toISOString(),
     }));
   }

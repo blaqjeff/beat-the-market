@@ -21,6 +21,8 @@ type CallRow = {
   matchMinuteAtCall: number | null;
   inRunningAtCall: boolean;
   hasReceipt: boolean;
+  finalHomeScore: number | null;
+  finalAwayScore: number | null;
 };
 
 function outcomeLabel(key: string, home: string, away: string): string {
@@ -48,15 +50,27 @@ function CallCard({
   call,
   home,
   away,
+  liveScore,
+  matchFinished,
 }: {
   call: CallRow;
   home: string;
   away: string;
+  liveScore: { home: number; away: number };
+  matchFinished: boolean;
 }) {
   const open = call.status === "pending";
-  const scoreline =
+  const scoreAtCall =
     call.homeScoreAtCall !== null && call.awayScoreAtCall !== null
       ? `${call.homeScoreAtCall}–${call.awayScoreAtCall}`
+      : null;
+  const finalHome =
+    call.finalHomeScore ?? (matchFinished || !open ? liveScore.home : null);
+  const finalAway =
+    call.finalAwayScore ?? (matchFinished || !open ? liveScore.away : null);
+  const finalScore =
+    finalHome !== null && finalAway !== null
+      ? `${finalHome}–${finalAway}`
       : null;
   const resultLabel = open
     ? "Open"
@@ -77,9 +91,15 @@ function CallCard({
           </p>
           <p className="mt-1 text-sm text-[color:var(--muted)]">
             {call.inRunningAtCall ? "In-play call" : "Pre-match call"}
-            {scoreline ? ` · score ${scoreline}` : ""}
+            {scoreAtCall ? ` · at call ${scoreAtCall}` : ""}
             {call.matchMinuteAtCall !== null ? ` · ${call.matchMinuteAtCall}'` : ""}
           </p>
+          {!open && finalScore ? (
+            <p className="mt-1 text-sm text-[color:var(--chalk)]">
+              Final{" "}
+              <span className="font-semibold tabular-nums">{finalScore}</span>
+            </p>
+          ) : null}
         </div>
         <span
           className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] ${resultTone(
@@ -151,10 +171,14 @@ export function MatchCallsSheet({
   calls,
   home,
   away,
+  liveScore,
+  matchFinished,
 }: {
   calls: CallRow[];
   home: string;
   away: string;
+  liveScore: { home: number; away: number };
+  matchFinished: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [tabOverride, setTabOverride] = useState<CallsTab | null>(null);
@@ -171,6 +195,7 @@ export function MatchCallsSheet({
   const preferredTab: CallsTab =
     openCalls.length === 0 && settledCalls.length > 0 ? "settled" : "open";
   const tab = tabOverride ?? preferredTab;
+  const hasOpenCalls = openCalls.length > 0;
 
   useEffect(() => {
     if (!open) return;
@@ -188,17 +213,29 @@ export function MatchCallsSheet({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-[color:var(--signal)] text-[color:var(--ink)] shadow-[0_12px_40px_rgba(0,0,0,0.45)] transition hover:brightness-110"
-        aria-label={`Your calls, ${calls.length} total`}
+        className={`fixed bottom-5 right-5 z-40 flex items-center justify-center rounded-full bg-[color:var(--signal)] text-[color:var(--ink)] shadow-[0_12px_40px_rgba(0,0,0,0.45)] transition hover:brightness-110 ${
+          hasOpenCalls ? "h-16 w-16" : "h-16 min-w-16 px-4"
+        }`}
+        aria-label={
+          hasOpenCalls
+            ? `Your calls, ${openCalls.length} open`
+            : "Your calls"
+        }
       >
-        <span className="flex flex-col items-center leading-none">
-          <span className="font-[family-name:var(--font-display)] text-xl">
-            {calls.length}
+        {hasOpenCalls ? (
+          <span className="flex flex-col items-center leading-none">
+            <span className="font-[family-name:var(--font-display)] text-xl">
+              {openCalls.length}
+            </span>
+            <span className="mt-1 font-mono text-[9px] uppercase tracking-[0.14em]">
+              Open
+            </span>
           </span>
-          <span className="mt-1 font-mono text-[9px] uppercase tracking-[0.14em]">
-            Calls
+        ) : (
+          <span className="max-w-[4.5rem] text-center font-mono text-[10px] font-semibold uppercase leading-tight tracking-[0.12em]">
+            Your calls
           </span>
-        </span>
+        )}
       </button>
 
       {open && (
@@ -269,7 +306,13 @@ export function MatchCallsSheet({
                 <ul className="space-y-3">
                   {visible.map((call) => (
                     <li key={call.id}>
-                      <CallCard call={call} home={home} away={away} />
+                      <CallCard
+                        call={call}
+                        home={home}
+                        away={away}
+                        liveScore={liveScore}
+                        matchFinished={matchFinished}
+                      />
                     </li>
                   ))}
                 </ul>
