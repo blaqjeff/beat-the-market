@@ -4,6 +4,8 @@ import { FeedStatusBanner } from "@/components/shell/FeedStatusBanner";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   let user: Awaited<ReturnType<typeof getCurrentUser>> = null;
   let fixtures: Array<{
@@ -12,6 +14,7 @@ export default async function Home() {
     away: string;
     startsAt: Date;
     competitionName: string | null;
+    gameState: string | null;
   }> = [];
 
   try {
@@ -35,10 +38,23 @@ export default async function Home() {
       away: row.awayParticipant.name,
       startsAt: row.startsAt,
       competitionName: row.competitionName,
+      gameState: row.gameState,
     }));
   } catch {
     fixtures = [];
   }
+
+  const featured = fixtures[0] ?? null;
+  const primaryHref = user
+    ? featured
+      ? `/matches/${featured.sourceFixtureId}`
+      : "/leaderboard"
+    : "/login";
+  const primaryLabel = user
+    ? featured
+      ? "Open match centre"
+      : "View leaderboard"
+    : "Start making calls";
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
@@ -58,33 +74,40 @@ export default async function Home() {
         </p>
         <div className="mt-9 flex flex-wrap gap-3">
           <Link
-            href={user ? "/leaderboard" : "/login"}
+            href={primaryHref}
             className="rounded-xl bg-[color:var(--signal)] px-5 py-3 font-semibold text-[color:var(--ink)] transition hover:brightness-110"
           >
-            {user ? "View leaderboard" : "Start making calls"}
+            {primaryLabel}
           </Link>
-          {process.env.NODE_ENV !== "production" && (
+          {user && (
             <Link
-              href="/setup/txline"
+              href="/leaderboard"
               className="rounded-xl border border-[color:var(--line)] px-5 py-3 text-sm font-semibold text-[color:var(--muted)] transition hover:text-[color:var(--chalk)]"
             >
-              TxLINE setup
+              Leaderboard
             </Link>
           )}
         </div>
       </section>
 
-      <section className="mt-10">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">
-          Matches
-        </p>
+      <section id="matches" className="mt-10">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">
+              Matches
+            </p>
+            <h2 className="mt-2 font-[family-name:var(--font-display)] text-2xl tracking-wide text-[color:var(--chalk)]">
+              Open boards
+            </h2>
+          </div>
+          <p className="text-sm text-[color:var(--muted)]">
+            Priced by TxLINE · settled with on-chain proofs
+          </p>
+        </div>
+
         {fixtures.length === 0 ? (
           <div className="mt-4 rounded-2xl border border-dashed border-[color:var(--line)] px-6 py-10 text-center text-[color:var(--muted)]">
-            No fixtures ingested yet. Run{" "}
-            <code className="text-[color:var(--chalk)]">
-              npm run ingestion:replay -- 18257865 72
-            </code>
-            .
+            Match boards will appear here once fixtures are available.
           </div>
         ) : (
           <ul className="mt-4 grid gap-3">
@@ -101,6 +124,9 @@ export default async function Home() {
                     <p className="mt-1 text-sm text-[color:var(--muted)]">
                       {fixture.competitionName ?? "World Cup"} ·{" "}
                       {fixture.startsAt.toLocaleString()}
+                      {fixture.gameState
+                        ? ` · ${fixture.gameState.replaceAll("_", " ")}`
+                        : ""}
                     </p>
                   </div>
                   <span className="font-mono text-xs uppercase tracking-[0.18em] text-[color:var(--signal)]">

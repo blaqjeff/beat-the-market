@@ -142,7 +142,9 @@ Server-only secrets must never use `NEXT_PUBLIC_` names. See `.env.example` for:
 | `/share/calls/[callId]` | Public card for remarkable wins only |
 | `/leagues` | Create / join private leagues |
 | `/leagues/[inviteCode]` | League board |
-| `/setup/txline` | Local TxLINE subscription helper |
+
+Operator-only (not linked in the product UI): `/setup/txline` on localhost in
+development, for activating TxLINE credentials.
 
 ### Ranking tie-break
 

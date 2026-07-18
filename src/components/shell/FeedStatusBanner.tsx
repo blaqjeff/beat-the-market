@@ -34,10 +34,10 @@ export async function FeedStatusBanner() {
     label = `${staleMarkets} market${staleMarkets === 1 ? "" : "s"} marked stale`;
     tone = "text-amber-200 border-amber-800/60 bg-amber-950/30";
   } else if (replay) {
-    label = "Replay mode — not writing live competition state";
+    label = "Demo feed — TxLINE replay data";
     tone = "text-[color:var(--signal)] border-[color:var(--line)]";
   } else if (live.length > 0) {
-    label = `Live feed connected (${live.map((c) => c.stream).join(", ")})`;
+    label = "Live TxLINE feed connected";
     tone = "text-[color:var(--signal)] border-[color:var(--line)]";
   }
 
