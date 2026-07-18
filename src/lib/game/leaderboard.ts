@@ -227,19 +227,14 @@ export async function getPublicShareCard(callId: string) {
   const receipt = await getReceipt(callId);
   if (!receipt || receipt.result !== "won") return null;
 
-  if (
-    !isRemarkableCall({
-      result: receipt.result,
-      probabilityBps: receipt.probabilityBps,
-      multiplierMilli: receipt.multiplierMilli,
-      pointsAwarded: receipt.pointsAwarded,
-    })
-  ) {
-    return null;
-  }
-
   const home = receipt.fixture.homeParticipant.name;
   const away = receipt.fixture.awayParticipant.name;
+  const remarkable = isRemarkableCall({
+    result: receipt.result,
+    probabilityBps: receipt.probabilityBps,
+    multiplierMilli: receipt.multiplierMilli,
+    pointsAwarded: receipt.pointsAwarded,
+  });
 
   return {
     callId: receipt.callId,
@@ -255,5 +250,6 @@ export async function getPublicShareCard(callId: string) {
     multiplierMilli: receipt.multiplierMilli,
     finalScore: `${receipt.finalHomeScore}-${receipt.finalAwayScore}`,
     narrative: receipt.narrative,
+    remarkable,
   };
 }

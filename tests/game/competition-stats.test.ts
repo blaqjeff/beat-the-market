@@ -119,7 +119,7 @@ describe("competition stats", () => {
     expect(compareRankablePlayers(ranked[0]!, ranked[1]!)).toBeLessThan(0);
   });
 
-  it("gates remarkable share cards", () => {
+  it("flags underdog / high-return wins as remarkable", () => {
     expect(
       isRemarkableCall({
         result: "won",

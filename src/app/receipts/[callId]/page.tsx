@@ -116,15 +116,33 @@ export default async function ReceiptPage({
         </div>
       </section>
 
-      {remarkable && (
-        <div className="mt-8">
-          <ShareButton
-            title="Beat the Market"
-            text={`${receipt.user.displayName ?? receipt.user.username} banked ${receipt.pointsAwarded} pts on Beat the Market.`}
-            url={shareUrl}
-          />
-        </div>
-      )}
+      {receipt.result === "won" ? (
+        <section className="mt-8 rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/40 px-5 py-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--signal)]">
+                {remarkable ? "Remarkable call" : "Share card"}
+              </p>
+              <p className="mt-2 text-sm text-[color:var(--muted)]">
+                Open a public card or share the link — no private account data.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href={`/share/calls/${receipt.callId}`}
+                className="rounded-xl border border-[color:var(--line)] px-4 py-2 text-sm font-semibold text-[color:var(--chalk)] transition hover:border-[color:var(--signal)]"
+              >
+                View card
+              </Link>
+              <ShareButton
+                title="Beat the Market"
+                text={`${receipt.user.displayName ?? receipt.user.username} banked ${receipt.pointsAwarded} pts on Beat the Market.`}
+                url={shareUrl}
+              />
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <details className="mt-10 rounded-2xl border border-[color:var(--line)] p-5">
         <summary className="cursor-pointer font-mono text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">

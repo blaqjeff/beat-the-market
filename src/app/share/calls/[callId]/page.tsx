@@ -48,8 +48,8 @@ export default async function ShareCallPage({
           Share unavailable
         </h1>
         <p className="mt-4 text-[color:var(--muted)]">
-          Public share cards are limited to remarkable winning calls and never
-          expose private account data.
+          Share cards are available for winning settled calls and never expose
+          private account data.
         </p>
         <p className="mt-6">
           <Link href="/" className="text-[color:var(--signal)] underline">
@@ -70,10 +70,12 @@ export default async function ShareCallPage({
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
       <p className="font-mono text-xs uppercase tracking-[0.22em] text-[color:var(--signal)]">
-        Remarkable call
+        {card.remarkable ? "Remarkable call" : "Winning call"}
       </p>
       <h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl tracking-wide text-[color:var(--chalk)]">
-        {card.displayName} beat the market
+        {card.remarkable
+          ? `${card.displayName} beat the market`
+          : `${card.displayName} banked points`}
       </h1>
       <p className="mt-4 text-[color:var(--muted)]">{card.match}</p>
 

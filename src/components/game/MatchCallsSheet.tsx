@@ -149,14 +149,24 @@ function CallCard({
             </>
           )}
         </p>
-        {call.hasReceipt ? (
-          <Link
-            href={`/receipts/${call.id}`}
-            className="rounded-lg bg-[color:var(--signal)] px-3 py-2 text-sm font-semibold text-[color:var(--ink)]"
-          >
-            View receipt
-          </Link>
-        ) : null}
+        <div className="flex flex-wrap gap-2">
+          {call.hasReceipt ? (
+            <Link
+              href={`/receipts/${call.id}`}
+              className="rounded-lg bg-[color:var(--signal)] px-3 py-2 text-sm font-semibold text-[color:var(--ink)]"
+            >
+              View receipt
+            </Link>
+          ) : null}
+          {call.hasReceipt && call.result === "won" ? (
+            <Link
+              href={`/share/calls/${call.id}`}
+              className="rounded-lg border border-[color:var(--line)] px-3 py-2 text-sm font-semibold text-[color:var(--chalk)]"
+            >
+              Share card
+            </Link>
+          ) : null}
+        </div>
       </div>
     </article>
   );
