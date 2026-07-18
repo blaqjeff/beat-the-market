@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+import { MatchCallsSheet } from "@/components/game/MatchCallsSheet";
+
 interface Outcome {
   key: string;
   label: string;
@@ -480,53 +482,13 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
         )}
       </section>
 
-      <section className="rounded-2xl border border-[color:var(--line)] p-5">
-        <h2 className="font-[family-name:var(--font-display)] text-xl tracking-wide text-[color:var(--chalk)]">
-          Your calls
-        </h2>
-        {state.calls.length === 0 ? (
-          <p className="mt-3 text-sm text-[color:var(--muted)]">No calls yet.</p>
-        ) : (
-          <ul className="mt-4 space-y-3">
-            {state.calls.map((call) => (
-              <li
-                key={call.id}
-                className="flex flex-wrap items-center justify-between gap-2 border-b border-[color:var(--line)] pb-3 text-sm"
-              >
-                <span className="text-[color:var(--chalk)]">
-                  {call.outcomeKey} · {call.credits} credits
-                  {call.inRunningAtCall ? " · live" : " · pre-match"}
-                  {call.result ? ` · ${call.result}` : ""}
-                </span>
-                <span className="text-[color:var(--muted)]">
-                  {call.homeScoreAtCall !== null && call.awayScoreAtCall !== null
-                    ? `${call.homeScoreAtCall}-${call.awayScoreAtCall}`
-                    : "—"}
-                  {call.matchMinuteAtCall !== null
-                    ? ` · ${call.matchMinuteAtCall}'`
-                    : ""}{" "}
-                  · {formatMultiplier(call.multiplierMilli)} ·{" "}
-                  {call.status === "pending"
-                    ? `${call.potentialPoints} pts potential`
-                    : `${call.pointsAwarded} pts`}{" "}
-                  · {call.status}
-                  {call.hasReceipt ? (
-                    <>
-                      {" · "}
-                      <Link
-                        href={`/receipts/${call.id}`}
-                        className="text-[color:var(--signal)] underline"
-                      >
-                        receipt
-                      </Link>
-                    </>
-                  ) : null}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {state.signedIn && (
+        <MatchCallsSheet
+          calls={state.calls}
+          home={state.fixture.home}
+          away={state.fixture.away}
+        />
+      )}
     </div>
   );
 }
