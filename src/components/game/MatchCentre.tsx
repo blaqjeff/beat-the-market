@@ -52,8 +52,13 @@ interface MatchState {
     timeline: Array<{
       sequence: number;
       summary: string;
+      headline?: string;
+      kind?: string;
       action: string;
       matchMinute: number | null;
+      homeScore: number | null;
+      awayScore: number | null;
+      visible?: boolean;
     }>;
   };
   feed: {
@@ -134,6 +139,46 @@ function SlipStat({ label, value }: { label: string; value: string }) {
       <p className="mt-1 text-sm tabular-nums text-[color:var(--chalk)]">{value}</p>
     </div>
   );
+}
+
+function timelineTone(kind: string | undefined) {
+  switch (kind) {
+    case "goal":
+      return "bg-[color:var(--signal)] text-[color:var(--ink)]";
+    case "finish":
+      return "bg-[color:var(--chalk)] text-[color:var(--ink)]";
+    case "suspend":
+      return "bg-amber-400/90 text-[color:var(--ink)]";
+    case "kickoff":
+    case "resume":
+    case "halftime":
+      return "bg-[color:var(--line)] text-[color:var(--chalk)]";
+    default:
+      return "bg-[color:var(--panel)] text-[color:var(--muted)] border border-[color:var(--line)]";
+  }
+}
+
+function timelineMark(kind: string | undefined) {
+  switch (kind) {
+    case "goal":
+      return "G";
+    case "finish":
+      return "FT";
+    case "kickoff":
+      return "KO";
+    case "halftime":
+      return "HT";
+    case "resume":
+      return "▶";
+    case "suspend":
+      return "‖";
+    case "card":
+      return "C";
+    case "var":
+      return "V";
+    default:
+      return "·";
+  }
 }
 
 export function MatchCentre({ initialState }: { initialState: MatchState }) {
@@ -578,33 +623,83 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
         {error && <p className="mt-4 text-sm text-red-300">{error}</p>}
       </section>
 
-      <section className="rounded-2xl border border-[color:var(--line)] p-5">
-        <h2 className="font-[family-name:var(--font-display)] text-xl tracking-wide text-[color:var(--chalk)]">
-          Match timeline
-        </h2>
-        {state.live.timeline.length === 0 ? (
-          <p className="mt-3 text-sm text-[color:var(--muted)]">
-            No score events yet.
+      <section className="rounded-2xl border border-[color:var(--line)] p-5 sm:p-6">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <h2 className="font-[family-name:var(--font-display)] text-xl tracking-wide text-[color:var(--chalk)]">
+            Match timeline
+          </h2>
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
+            Key moments
           </p>
-        ) : (
-          <ul className="mt-4 space-y-3">
-            {state.live.timeline.slice(0, 12).map((event) => (
-              <li
-                key={`${event.sequence}-${event.action}`}
-                className="border-b border-[color:var(--line)] pb-3"
-              >
-                <div className="flex items-baseline gap-3">
-                  <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--signal)]">
-                    {event.matchMinute !== null ? `${event.matchMinute}'` : "—"}
-                  </span>
-                  <p className="text-sm text-[color:var(--chalk)]">
-                    {event.summary}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        </div>
+        {(() => {
+          const events = state.live.timeline
+            .filter((event) => event.visible !== false)
+            .slice(0, 14);
+          if (events.length === 0) {
+            return (
+              <p className="mt-4 rounded-xl border border-dashed border-[color:var(--line)] px-4 py-8 text-center text-sm text-[color:var(--muted)]">
+                No key moments yet — they appear as the match moves.
+              </p>
+            );
+          }
+          return (
+            <ol className="relative mt-6 space-y-0">
+              <div
+                aria-hidden
+                className="absolute bottom-3 left-[1.15rem] top-3 w-px bg-[color:var(--line)]"
+              />
+              {events.map((event) => {
+                const headline = event.headline ?? event.summary;
+                const scoreline =
+                  event.homeScore !== null && event.awayScore !== null
+                    ? `${event.homeScore}–${event.awayScore}`
+                    : null;
+                return (
+                  <li
+                    key={`${event.sequence}-${event.action}`}
+                    className="relative grid grid-cols-[2.3rem_1fr] gap-3 py-3 sm:grid-cols-[2.3rem_minmax(0,1fr)_auto] sm:items-center"
+                  >
+                    <div className="relative z-10 flex justify-center">
+                      <span
+                        className={`flex h-9 w-9 items-center justify-center rounded-full font-mono text-[10px] font-semibold tracking-wide ${timelineTone(
+                          event.kind
+                        )}`}
+                      >
+                        {timelineMark(event.kind)}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                        <span className="font-mono text-xs tabular-nums text-[color:var(--signal)]">
+                          {event.matchMinute !== null
+                            ? `${event.matchMinute}'`
+                            : "—"}
+                        </span>
+                        <p
+                          className={`text-sm sm:text-base ${
+                            event.kind === "goal"
+                              ? "font-semibold text-[color:var(--chalk)]"
+                              : "text-[color:var(--chalk)]"
+                          }`}
+                        >
+                          {headline}
+                        </p>
+                      </div>
+                    </div>
+                    {scoreline ? (
+                      <p className="col-start-2 font-mono text-sm tabular-nums text-[color:var(--muted)] sm:col-start-auto sm:text-right sm:text-base sm:text-[color:var(--chalk)]">
+                        {scoreline}
+                      </p>
+                    ) : (
+                      <span className="hidden sm:block" />
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          );
+        })()}
       </section>
 
       {state.signedIn && (

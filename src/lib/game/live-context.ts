@@ -16,15 +16,31 @@ export interface LiveClock {
   display: string | null;
 }
 
+export type TimelineKind =
+  | "goal"
+  | "kickoff"
+  | "halftime"
+  | "resume"
+  | "suspend"
+  | "finish"
+  | "card"
+  | "var"
+  | "note"
+  | "other";
+
 export interface TimelineEvent {
   sequence: number;
   action: string;
+  kind: TimelineKind;
+  headline: string;
   gameState: string | null;
   sourceTimestamp: string | null;
   homeScore: number | null;
   awayScore: number | null;
   matchMinute: number | null;
+  /** @deprecated prefer headline — kept for older clients */
   summary: string;
+  visible: boolean;
 }
 
 export interface LiveBoard {
@@ -162,6 +178,94 @@ export function materialSuspensionAction(action: string): boolean {
   );
 }
 
+const NOISE_ACTIONS = new Set([
+  "comment",
+  "coverage_update",
+  "heartbeat",
+  "ping",
+  "stats_update",
+]);
+
+export function timelineKind(action: string): TimelineKind {
+  const a = action.toLowerCase();
+  if (a.includes("goal")) return "goal";
+  if (a.includes("kick_off") || a.includes("kickoff")) return "kickoff";
+  if (a.includes("half_time") || a.includes("halftime")) return "halftime";
+  if (a.includes("resume") || a.includes("second_half")) return "resume";
+  if (a.includes("suspend") || a.includes("interrupt")) return "suspend";
+  if (
+    a.includes("final") ||
+    a.includes("finished") ||
+    a.includes("full_time") ||
+    a.includes("fulltime")
+  ) {
+    return "finish";
+  }
+  if (a.includes("card")) return "card";
+  if (a.includes("var")) return "var";
+  if (NOISE_ACTIONS.has(a)) return "note";
+  return "other";
+}
+
+export function timelineHeadline(input: {
+  action: string;
+  kind: TimelineKind;
+  homeScore: number | null;
+  awayScore: number | null;
+  previousHome: number | null;
+  previousAway: number | null;
+  homeName?: string;
+  awayName?: string;
+}): string {
+  const home = input.homeName ?? "Home";
+  const away = input.awayName ?? "Away";
+
+  if (input.kind === "goal") {
+    if (
+      input.homeScore !== null &&
+      input.previousHome !== null &&
+      input.homeScore > input.previousHome
+    ) {
+      return `${home} score`;
+    }
+    if (
+      input.awayScore !== null &&
+      input.previousAway !== null &&
+      input.awayScore > input.previousAway
+    ) {
+      return `${away} score`;
+    }
+    return "Goal";
+  }
+
+  switch (input.kind) {
+    case "kickoff":
+      return "Kick-off";
+    case "halftime":
+      return "Half-time";
+    case "resume":
+      return input.action.toLowerCase().includes("second")
+        ? "Second half"
+        : "Play resumes";
+    case "suspend":
+      return "Markets paused";
+    case "finish":
+      return "Full time";
+    case "card":
+      return input.action.toLowerCase().includes("red")
+        ? "Red card"
+        : "Card";
+    case "var":
+      return "VAR check";
+    case "note":
+      return "Update";
+    default:
+      return input.action
+        .replaceAll("_", " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+}
+
 export interface MatchEventLike {
   sequence: number;
   action: string;
@@ -177,11 +281,15 @@ export function buildLiveBoard(input: {
   participant1IsHome: boolean;
   events: MatchEventLike[];
   marketsSuspended?: boolean;
+  homeName?: string;
+  awayName?: string;
 }): LiveBoard {
   const ordered = [...input.events].sort((a, b) => a.sequence - b.sequence);
   let score = goalsFromStats({}, input.participant1IsHome);
   let clock = clockFromPayload({});
   const timeline: TimelineEvent[] = [];
+  let previousHome: number | null = null;
+  let previousAway: number | null = null;
 
   for (const event of ordered) {
     const eventScore = goalsFromStats(event.stats, input.participant1IsHome);
@@ -201,27 +309,46 @@ export function buildLiveBoard(input: {
       clock = eventClock;
     }
 
-    const summaryParts = [event.action];
-    if (hasStats) {
-      summaryParts.push(`${score.home}-${score.away}`);
-    }
-    if (eventClock.display) {
-      summaryParts.push(eventClock.display);
-    }
+    const kind = timelineKind(event.action);
+    const homeScore = hasStats ? score.home : null;
+    const awayScore = hasStats ? score.away : null;
+    const headline = timelineHeadline({
+      action: event.action,
+      kind,
+      homeScore,
+      awayScore,
+      previousHome,
+      previousAway,
+      homeName: input.homeName,
+      awayName: input.awayName,
+    });
+    const scoreline =
+      homeScore !== null && awayScore !== null
+        ? `${homeScore}–${awayScore}`
+        : null;
+    const summary = scoreline ? `${headline} · ${scoreline}` : headline;
 
     timeline.push({
       sequence: event.sequence,
       action: event.action,
+      kind,
+      headline,
       gameState: event.gameState,
       sourceTimestamp:
         event.sourceTimestamp === null || event.sourceTimestamp === undefined
           ? null
           : String(event.sourceTimestamp),
-      homeScore: hasStats ? score.home : null,
-      awayScore: hasStats ? score.away : null,
+      homeScore,
+      awayScore,
       matchMinute: eventClock.minutes,
-      summary: summaryParts.join(" · "),
+      summary,
+      visible: kind !== "note",
     });
+
+    if (hasStats) {
+      previousHome = score.home;
+      previousAway = score.away;
+    }
   }
 
   const latest = ordered[ordered.length - 1] ?? null;

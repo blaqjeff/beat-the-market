@@ -56,6 +56,8 @@ export async function getMatchState(sourceFixtureId: string, userId?: string) {
   const live = buildLiveBoard({
     gameState: fixture.gameState,
     participant1IsHome: fixture.participant1IsHome,
+    homeName: fixture.homeParticipant.name,
+    awayName: fixture.awayParticipant.name,
     events: fixture.matchEvents.map((event) => ({
       sequence: event.sequence,
       action: event.action,

@@ -80,7 +80,53 @@ describe("live-context", () => {
     expect(board.phase).toBe("in_play");
     expect(board.clock.minutes).toBe(18);
     expect(board.timeline[0]?.action).toBe("goal");
+    expect(board.timeline[0]?.kind).toBe("goal");
+    expect(board.timeline[0]?.headline).toBe("Home score");
+    expect(board.timeline[0]?.summary).toBe("Home score · 1–0");
+    expect(board.timeline[0]?.visible).toBe(true);
     expect(board.callsBlocked).toBe(false);
+
+    const named = buildLiveBoard({
+      gameState: "first_half",
+      participant1IsHome: true,
+      homeName: "France",
+      awayName: "England",
+      events: [
+        {
+          sequence: 10,
+          action: "kick_off",
+          gameState: "first_half",
+          sourceTimestamp: 1,
+          stats: { "1": 0, "2": 0 },
+          data: {},
+          rawPayload: { Minutes: 1 },
+        },
+        {
+          sequence: 11,
+          action: "goal",
+          gameState: "first_half",
+          sourceTimestamp: 2,
+          stats: { "1": 0, "2": 1 },
+          data: {},
+          rawPayload: { Minutes: 22 },
+        },
+        {
+          sequence: 12,
+          action: "comment",
+          gameState: "first_half",
+          sourceTimestamp: 3,
+          stats: {},
+          data: {},
+          rawPayload: {},
+        },
+      ],
+    });
+    expect(
+      named.timeline.find((row) => row.action === "goal")?.headline
+    ).toBe("England score");
+    expect(named.timeline.find((row) => row.action === "comment")?.visible).toBe(
+      false
+    );
 
     const suspended = buildLiveBoard({
       gameState: "first_half",
