@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { getLeaderboard } from "@/lib/game/leaderboard";
 
+export const dynamic = "force-dynamic";
+
 export default async function LeaderboardPage() {
   const board = await getLeaderboard(50);
   const balanced =

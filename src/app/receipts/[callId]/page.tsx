@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { getReceipt } from "@/lib/game/leaderboard";
 
+export const dynamic = "force-dynamic";
+
 export default async function ReceiptPage({
   params,
 }: {
