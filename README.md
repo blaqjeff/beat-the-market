@@ -76,14 +76,19 @@ TxLINE activation (local only): [http://localhost:3000/setup/txline](http://loca
 
 ### Demo path (France vs England)
 
+Order matters: **place calls before settlement**. Settlement marks the match
+finished and closes markets.
+
 ```bash
 npm run db:migrate
 npm run ingestion:replay -- 18257865 72
+# If the match was already settled and markets are closed:
+npm run demo:reset-match -- 18257865
 npm run dev
-# Sign in → open /matches/18257865 → place a call
+# Sign in (magic link goes straight into the app — no password/setup step)
+# Open /matches/18257865 → place a call while markets are open
 npm run settlement:run -- 18257865
-# Open /receipts/<callId>, /leaderboard, /profile/<username>
-# Optional: npm run settlement:run -- 18257865 --pda
+# Then open /receipts/<callId>, /leaderboard, /profile/<username>
 ```
 
 Replay loads captured odds/scores plus optional `*.live.json` in-play fixtures.
