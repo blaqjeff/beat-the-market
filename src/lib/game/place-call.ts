@@ -2,8 +2,9 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { ensureMatchCredits } from "@/lib/game/credits";
+import { buildLiveBoard } from "@/lib/game/live-context";
 import {
-  isSupportedPrematchMarket,
+  isSupportedCallMarket,
   potentialPoints,
   probabilityBpsFromPct,
   multiplierMilliFromProbabilityBps,
@@ -50,7 +51,14 @@ export async function placeCall(input: PlaceCallInput) {
     const market = await tx.market.findUnique({
       where: { id: input.marketId },
       include: {
-        fixture: true,
+        fixture: {
+          include: {
+            matchEvents: {
+              orderBy: { sequence: "asc" },
+              take: 80,
+            },
+          },
+        },
         oddsSnapshots: {
           orderBy: { sourceTimestamp: "desc" },
           take: 1,
@@ -63,13 +71,13 @@ export async function placeCall(input: PlaceCallInput) {
     }
 
     if (
-      !isSupportedPrematchMarket({
+      !isSupportedCallMarket({
         superOddsType: market.superOddsType,
         inRunning: market.inRunning,
         marketPeriod: market.marketPeriod,
       })
     ) {
-      throw new AppError("validation", "Market is not available for pre-match calls");
+      throw new AppError("validation", "Market is not available for calls");
     }
 
     const replayMode = await tx.feedCursor.findFirst({
@@ -81,6 +89,30 @@ export async function placeCall(input: PlaceCallInput) {
       market.availability === "closed"
     ) {
       throw new AppError("conflict", `Market is ${market.availability}`);
+    }
+
+    const live = buildLiveBoard({
+      gameState: market.fixture.gameState,
+      participant1IsHome: market.fixture.participant1IsHome,
+      events: market.fixture.matchEvents.map((event) => ({
+        sequence: event.sequence,
+        action: event.action,
+        gameState: event.gameState,
+        sourceTimestamp: event.sourceTimestamp,
+        stats: event.stats,
+        data: event.data,
+        rawPayload: event.rawPayload,
+      })),
+    });
+
+    if (live.phase === "finished") {
+      throw new AppError("conflict", "Match is finished");
+    }
+    if (live.phase === "suspended" || live.callsBlocked) {
+      throw new AppError(
+        "conflict",
+        live.blockReason ?? "Calls are blocked during this match state"
+      );
     }
 
     const latest = market.oddsSnapshots[0];
@@ -158,6 +190,11 @@ export async function placeCall(input: PlaceCallInput) {
         multiplierMilli,
         potentialPoints: points,
         sourceTimestamp: latest.sourceTimestamp,
+        homeScoreAtCall: live.score.home,
+        awayScoreAtCall: live.score.away,
+        matchMinuteAtCall: live.clock.minutes,
+        gameStateAtCall: live.gameState,
+        inRunningAtCall: market.inRunning,
         status: "pending",
         idempotencyKey: input.idempotencyKey,
       },
@@ -181,6 +218,7 @@ export async function placeCall(input: PlaceCallInput) {
     userId: input.userId,
     fixtureId: input.fixtureId,
     credits: input.credits,
+    inRunningAtCall: call.inRunningAtCall,
   });
 
   return { call, replayed: false as const };

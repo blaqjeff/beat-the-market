@@ -1,0 +1,47 @@
+[
+  {
+    "FixtureId": 18257865,
+    "MessageId": "1838356673:live:000001-10021-stab",
+    "Ts": 1784408600000,
+    "Bookmaker": "TXLineStablePriceDemargined",
+    "BookmakerId": 10021,
+    "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+    "GameState": "first_half",
+    "InRunning": true,
+    "MarketParameters": null,
+    "MarketPeriod": null,
+    "PriceNames": ["part1", "draw", "part2"],
+    "Prices": [1600, 3800, 4600],
+    "Pct": ["48.200", "26.100", "25.700"]
+  },
+  {
+    "FixtureId": 18257865,
+    "MessageId": "1838356673:live:000002-10021-stab",
+    "Ts": 1784409000000,
+    "Bookmaker": "TXLineStablePriceDemargined",
+    "BookmakerId": 10021,
+    "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+    "GameState": "first_half",
+    "InRunning": true,
+    "MarketParameters": null,
+    "MarketPeriod": null,
+    "PriceNames": ["part1", "draw", "part2"],
+    "Prices": [1400, 3600, 5000],
+    "Pct": ["55.400", "22.800", "21.800"]
+  },
+  {
+    "FixtureId": 18257865,
+    "MessageId": "1838356673:live:000003-10021-stab",
+    "Ts": 1784409001000,
+    "Bookmaker": "TXLineStablePriceDemargined",
+    "BookmakerId": 10021,
+    "SuperOddsType": "OVERUNDER_PARTICIPANT_GOALS",
+    "GameState": "first_half",
+    "InRunning": true,
+    "MarketParameters": "line=2.5",
+    "MarketPeriod": null,
+    "PriceNames": ["over", "under"],
+    "Prices": [2100, 2800],
+    "Pct": ["57.250", "42.750"]
+  }
+]

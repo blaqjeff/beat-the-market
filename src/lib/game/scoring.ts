@@ -49,10 +49,32 @@ export function quoteOutcome(rawPct: string | number, credits: number) {
   };
 }
 
-export const PREMATCH_MARKET_TYPES = new Set([
+export const CALL_MARKET_TYPES = new Set([
   "1X2_PARTICIPANT_RESULT",
   "OVERUNDER_PARTICIPANT_GOALS",
 ]);
+
+/** @deprecated Use CALL_MARKET_TYPES */
+export const PREMATCH_MARKET_TYPES = CALL_MARKET_TYPES;
+
+const GOALSCORER_HINT =
+  /goal.?scorer|first.?goal|next.?goal|anytime.?scorer|player.?to.?score/i;
+
+export function isGoalscorerMarketType(superOddsType: string): boolean {
+  return GOALSCORER_HINT.test(superOddsType);
+}
+
+export function isSupportedCallMarket(input: {
+  superOddsType: string;
+  inRunning: boolean;
+  marketPeriod: string | null;
+}): boolean {
+  void input.inRunning;
+  if (!CALL_MARKET_TYPES.has(input.superOddsType)) return false;
+  // Prefer full-match markets; skip period-scoped rows for the first release.
+  if (input.marketPeriod) return false;
+  return true;
+}
 
 export function isSupportedPrematchMarket(input: {
   superOddsType: string;
@@ -60,8 +82,5 @@ export function isSupportedPrematchMarket(input: {
   marketPeriod: string | null;
 }): boolean {
   if (input.inRunning) return false;
-  if (!PREMATCH_MARKET_TYPES.has(input.superOddsType)) return false;
-  // Prefer full-match markets; skip period-scoped rows for the first release.
-  if (input.marketPeriod) return false;
-  return true;
+  return isSupportedCallMarket(input);
 }

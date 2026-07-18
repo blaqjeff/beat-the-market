@@ -18,6 +18,15 @@ async function readJson(relativePath: string): Promise<unknown> {
   return JSON.parse(await readFile(absolute, "utf8")) as unknown;
 }
 
+async function readJsonOptional(relativePath: string): Promise<unknown[] | null> {
+  try {
+    const payload = await readJson(relativePath);
+    return Array.isArray(payload) ? payload : null;
+  } catch {
+    return null;
+  }
+}
+
 async function main() {
   const fixtureId = process.argv[2] ?? "18257865";
   const competitionId = process.argv[3] ?? "72";
@@ -73,6 +82,32 @@ async function main() {
     if (!result.created) eventsDuplicate += 1;
   }
 
+  const liveOdds = await readJsonOptional(
+    `tests/fixtures/txline/odds.${fixtureId}.live.json`
+  );
+  const liveScores = await readJsonOptional(
+    `tests/fixtures/txline/scores.${fixtureId}.live.json`
+  );
+
+  let liveOddsCreated = 0;
+  if (liveOdds) {
+    for (const row of liveOdds) {
+      const result = await persistOddsRow(row, {
+        nowMs: Number.MAX_SAFE_INTEGER,
+        maxAgeMs: Number.MAX_SAFE_INTEGER,
+      });
+      if (result.created) liveOddsCreated += 1;
+    }
+  }
+
+  let liveEventsCreated = 0;
+  if (liveScores) {
+    for (const row of liveScores) {
+      const result = await persistMatchEvent(row);
+      if (result.created) liveEventsCreated += 1;
+    }
+  }
+
   logInfo("ingestion.replay.complete", {
     fixtureId,
     fixturesUpserted,
@@ -80,6 +115,8 @@ async function main() {
     oddsDuplicate,
     eventsCreated,
     eventsDuplicate,
+    liveOddsCreated,
+    liveEventsCreated,
   });
 
   console.log(
@@ -91,6 +128,8 @@ async function main() {
         oddsDuplicate,
         eventsCreated,
         eventsDuplicate,
+        liveOddsCreated,
+        liveEventsCreated,
       },
       null,
       2
