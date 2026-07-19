@@ -1,9 +1,6 @@
 import { listFeedCursors } from "@/lib/ingestion/cursors";
 import { prisma } from "@/lib/db/prisma";
 
-/** Ignore brief reconnect flaps so users don't see a false alarm. */
-const RECONNECT_BANNER_AFTER_MS = 20_000;
-
 export async function FeedStatusBanner() {
   let cursors: Awaited<ReturnType<typeof listFeedCursors>> = [];
   let staleMarkets = 0;
@@ -21,14 +18,10 @@ export async function FeedStatusBanner() {
     return null;
   }
 
-  const now = Date.now();
-  const reconnecting = cursors.filter((cursor) => {
-    if (cursor.status !== "reconnecting" && cursor.status !== "error") {
-      return false;
-    }
-    const age = now - cursor.updatedAt.getTime();
-    return age >= RECONNECT_BANNER_AFTER_MS;
-  });
+  // Show only lasting reconnect/error states (not a brief "starting" blip).
+  const reconnecting = cursors.filter(
+    (cursor) => cursor.status === "reconnecting" || cursor.status === "error"
+  );
   const replay = cursors.some((cursor) => cursor.mode === "replay");
 
   // Healthy live feed — stay quiet. Only surface lasting degraded states.
