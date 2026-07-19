@@ -122,12 +122,10 @@ export async function placeCall(input: PlaceCallInput) {
     }
 
     // Cinema/replay use fixture timestamps, not wall-clock freshness.
+    // Gate on quote age only — availability "stale" is a UI hint and can lag.
     if (!demoFeed) {
       const ageMs = Date.now() - Number(latest.sourceTimestamp);
-      if (
-        market.availability === "stale" ||
-        ageMs > env.TXLINE_MAX_SNAPSHOT_AGE_MS
-      ) {
+      if (ageMs > env.TXLINE_MAX_SNAPSHOT_AGE_MS) {
         throw new AppError("conflict", "Market price is stale");
       }
     }

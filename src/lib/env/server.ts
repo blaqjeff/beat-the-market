@@ -37,7 +37,9 @@ const serverEnvSchema = z
       .number()
       .int()
       .positive()
-      .default(15_000),
+      // TxLINE only pushes a market when the price moves. Stable boards must
+      // stay tradeable for a couple of minutes, not 15 seconds.
+      .default(120_000),
     /** Comma-separated TxLINE competition IDs for fixture catalogue sync. */
     TXLINE_COMPETITION_IDS: z
       .preprocess(

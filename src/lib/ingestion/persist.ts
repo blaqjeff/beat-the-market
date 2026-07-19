@@ -228,7 +228,8 @@ export async function persistMatchEvent(input: unknown) {
 
 export async function markStaleMarkets(maxAgeMs: number, nowMs = Date.now()) {
   const cutoff = BigInt(nowMs - maxAgeMs);
-  const result = await prisma().market.updateMany({
+
+  const stale = await prisma().market.updateMany({
     where: {
       availability: { in: ["open", "unknown"] },
       OR: [
@@ -238,7 +239,18 @@ export async function markStaleMarkets(maxAgeMs: number, nowMs = Date.now()) {
     },
     data: { availability: "stale" },
   });
-  return result.count;
+
+  // Revive boards that still have a recent tick (e.g. after raising max age,
+  // or after a brief gap that no longer exceeds the threshold).
+  const revived = await prisma().market.updateMany({
+    where: {
+      availability: "stale",
+      lastSourceTimestamp: { gte: cutoff },
+    },
+    data: { availability: "open" },
+  });
+
+  return stale.count + revived.count;
 }
 
 export type { NormalizedOddsRow };

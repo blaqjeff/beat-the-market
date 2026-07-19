@@ -207,7 +207,7 @@ async function staleLoop() {
     try {
       const count = await markStaleMarkets(env.TXLINE_MAX_SNAPSHOT_AGE_MS);
       if (count > 0) {
-        logInfo("ingestion.markets.marked_stale", { count });
+        logInfo("ingestion.markets.stale_sweep", { count });
       }
     } catch (error) {
       logError("ingestion.stale_loop_failed", error);
