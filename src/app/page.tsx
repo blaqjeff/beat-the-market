@@ -3,12 +3,17 @@ import Link from "next/link";
 import { FeedStatusBanner } from "@/components/shell/FeedStatusBanner";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getHomeFixtureBoard } from "@/lib/game/home-board";
+import { getWorldCupHistory } from "@/lib/game/world-cup-history";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   let user: Awaited<ReturnType<typeof getCurrentUser>> = null;
   let fixtures: Awaited<ReturnType<typeof getHomeFixtureBoard>> = [];
+  let history: Awaited<ReturnType<typeof getWorldCupHistory>> = {
+    tournament: "FIFA World Cup 2026",
+    matches: [],
+  };
 
   try {
     user = await getCurrentUser();
@@ -20,6 +25,12 @@ export default async function Home() {
     fixtures = await getHomeFixtureBoard(24);
   } catch {
     fixtures = [];
+  }
+
+  try {
+    history = await getWorldCupHistory(40);
+  } catch {
+    history = { tournament: "FIFA World Cup 2026", matches: [] };
   }
 
   const featured =
@@ -70,6 +81,14 @@ export default async function Home() {
               Leaderboard
             </Link>
           )}
+          {history.matches.length > 0 ? (
+            <a
+              href="#history"
+              className="rounded-xl border border-[color:var(--line)] px-5 py-3 text-sm font-semibold text-[color:var(--muted)] transition hover:text-[color:var(--chalk)]"
+            >
+              Match history
+            </a>
+          ) : null}
         </div>
       </section>
 
@@ -162,6 +181,80 @@ export default async function Home() {
           </ul>
         )}
       </section>
+
+      {history.matches.length > 0 ? (
+        <section id="history" className="mt-14 scroll-mt-24">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="font-mono text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">
+                Results archive
+              </p>
+              <h2 className="mt-2 font-[family-name:var(--font-display)] text-2xl tracking-wide text-[color:var(--chalk)]">
+                World Cup history
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm text-[color:var(--muted)]">
+                Final scores and short recaps from earlier {history.tournament}{" "}
+                matches — newest first.
+              </p>
+            </div>
+            <p className="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--muted)]">
+              {history.matches.length} played
+            </p>
+          </div>
+
+          <ul className="mt-5 grid gap-3">
+            {history.matches.map((match) => {
+              const body = (
+                <>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full border border-[color:var(--line)] px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
+                      {match.round}
+                    </span>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
+                      {match.playedLabel}
+                    </span>
+                    {match.venue ? (
+                      <span className="text-xs text-[color:var(--muted)]">
+                        · {match.venue}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-2 font-[family-name:var(--font-display)] text-lg tracking-wide text-[color:var(--chalk)]">
+                    {match.home}
+                    <span className="mx-2 font-mono tabular-nums text-[color:var(--signal)]">
+                      {match.homeScore}–{match.awayScore}
+                    </span>
+                    {match.away}
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-[color:var(--chalk)]/80">
+                    {match.resultLabel}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                    {match.summary}
+                  </p>
+                </>
+              );
+
+              return (
+                <li key={match.id}>
+                  {match.sourceFixtureId ? (
+                    <Link
+                      href={`/matches/${match.sourceFixtureId}`}
+                      className="block rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/30 px-5 py-4 transition hover:border-[color:var(--signal)]/50"
+                    >
+                      {body}
+                    </Link>
+                  ) : (
+                    <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/30 px-5 py-4">
+                      {body}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
     </main>
   );
 }

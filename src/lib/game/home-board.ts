@@ -37,7 +37,7 @@ export async function getHomeFixtureBoard(limit = 24): Promise<HomeFixtureCard[]
         take: 40,
       },
     },
-    take: limit,
+    take: Math.max(limit * 2, 48),
   });
 
   const cards = rows.map((row) => {
@@ -78,8 +78,14 @@ export async function getHomeFixtureBoard(limit = 24): Promise<HomeFixtureCard[]
           ? live.momentum.label
           : null,
       sortRank: phaseRank(live.phase, row.startsAt),
-    } satisfies HomeFixtureCard;
+      phase: live.phase,
+    } satisfies HomeFixtureCard & { phase: string };
   });
 
-  return cards.sort((a, b) => a.sortRank - b.sortRank);
+  // Finished games live in the History section — keep this board for live / upcoming.
+  return cards
+    .filter((row) => row.phase !== "finished")
+    .sort((a, b) => a.sortRank - b.sortRank)
+    .slice(0, limit)
+    .map(({ phase: _phase, ...card }) => card);
 }
