@@ -25,7 +25,9 @@ worker.
 - Set real TxLINE credentials.
 - Set `SENDBYTE_API_KEY` and a verified `EMAIL_FROM` (required in production).
 - Set `APP_URL` to the public `https://` origin.
-- Set a strong `AUTH_SECRET` (32+ characters).
+Do **not** set `NODE_ENV` in the Vercel dashboard. Vercel sets it during
+build and runtime. Setting `NODE_ENV=production` as a project env var can skip
+devDependencies and break the CSS build.
 
 ---
 
