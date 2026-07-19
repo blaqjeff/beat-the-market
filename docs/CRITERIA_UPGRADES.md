@@ -21,6 +21,11 @@ Source: https://superteam.fun/earn/listing/consumer-and-fan-experiences
 - Deploy / demo video (submission pack — separate Phase 7)
 - Paid checkout / brand admin console (pitch only for hackathon)
 
+## Demo notes
+
+- Cinema **Reset** rewinds match events/odds to prematch and drops open
+  (pending) calls only. Settled/void calls, point ledger, and receipts stay.
+
 ## Monetization (for judges)
 
 See [BUSINESS.md](./BUSINESS.md): free leagues → premium rules → branded/sponsored

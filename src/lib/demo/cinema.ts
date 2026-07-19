@@ -134,18 +134,44 @@ export async function resetCinema(fixtureId = DEMO_FIXTURE_ID) {
     throw new AppError("not_found", `Fixture ${fixtureId} missing after fixture sync`);
   }
 
+  // Rewind match feed only. Keep settled/void calls, points, and receipts so
+  // leaderboard scores survive cinema Reset during demo recording.
   await prisma().$transaction(async (tx) => {
-    await tx.settlementReceipt.deleteMany({ where: { fixtureId: fixture.id } });
-    await tx.pointLedgerEntry.deleteMany({ where: { fixtureId: fixture.id } });
-    await tx.creditLedgerEntry.deleteMany({
-      where: { account: { fixtureId: fixture.id } },
+    const pendingCalls = await tx.call.findMany({
+      where: { fixtureId: fixture.id, status: "pending" },
+      select: { id: true, userId: true, credits: true },
     });
-    await tx.call.deleteMany({ where: { fixtureId: fixture.id } });
-    await tx.matchCreditAccount.deleteMany({ where: { fixtureId: fixture.id } });
-    await tx.scoreValidationProof.deleteMany({ where: { fixtureId: fixture.id } });
+    const pendingIds = pendingCalls.map((call) => call.id);
+
+    for (const call of pendingCalls) {
+      await tx.matchCreditAccount.updateMany({
+        where: { userId: call.userId, fixtureId: fixture.id },
+        data: { remainingCredits: { increment: call.credits } },
+      });
+    }
+
+    if (pendingIds.length > 0) {
+      await tx.creditLedgerEntry.deleteMany({
+        where: { callId: { in: pendingIds } },
+      });
+      await tx.call.deleteMany({
+        where: { id: { in: pendingIds } },
+      });
+    }
+
     await tx.matchEvent.deleteMany({ where: { fixtureId: fixture.id } });
-    await tx.oddsSnapshot.deleteMany({ where: { fixtureId: fixture.id } });
-    await tx.market.deleteMany({ where: { fixtureId: fixture.id } });
+
+    // Drop unused markets/odds; keep rows still referenced by settled calls.
+    await tx.oddsSnapshot.deleteMany({
+      where: { fixtureId: fixture.id, calls: { none: {} } },
+    });
+    await tx.market.deleteMany({
+      where: { fixtureId: fixture.id, calls: { none: {} } },
+    });
+    await tx.scoreValidationProof.deleteMany({
+      where: { fixtureId: fixture.id, receipts: { none: {} } },
+    });
+
     await tx.fixture.update({
       where: { id: fixture.id },
       data: { gameState: "scheduled", lastSourceTimestamp: null },

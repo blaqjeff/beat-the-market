@@ -29,15 +29,23 @@ export async function createSession(userId: string) {
   });
 
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: serverEnv().NODE_ENV === "production",
-    path: "/",
-    expires: expiresAt,
-  });
+  cookieStore.set(
+    SESSION_COOKIE,
+    token,
+    sessionCookieOptions(expiresAt),
+  );
 
   return { token, expiresAt };
+}
+
+function sessionCookieOptions(expiresAt?: Date) {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: serverEnv().NODE_ENV === "production",
+    path: "/",
+    ...(expiresAt ? { expires: expiresAt } : {}),
+  };
 }
 
 export async function destroySession() {
@@ -48,7 +56,11 @@ export async function destroySession() {
       where: { tokenHash: hashToken(token) },
     });
   }
-  cookieStore.delete(SESSION_COOKIE);
+  // Must match set() attributes (path/sameSite/secure) or the browser keeps the cookie.
+  cookieStore.set(SESSION_COOKIE, "", {
+    ...sessionCookieOptions(),
+    maxAge: 0,
+  });
 }
 
 export async function getCurrentUser() {

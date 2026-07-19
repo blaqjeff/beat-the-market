@@ -1,19 +1,20 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function SignOutButton() {
-  const router = useRouter();
   const [busy, setBusy] = useState(false);
 
   async function signOut() {
     setBusy(true);
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.refresh();
-      router.push("/");
-    } finally {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      // Hard navigate so the root layout (header) re-fetches without a stale RSC cache.
+      window.location.assign("/");
+    } catch {
       setBusy(false);
     }
   }

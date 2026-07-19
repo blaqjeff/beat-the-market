@@ -76,7 +76,7 @@ export function DemoCinemaBar({
           </p>
           <p className="mt-1 text-sm text-[color:var(--muted)]">
             {demo.currentHint ??
-              "Use Advance to play the captured France vs England match beat by beat."}
+              "Use Advance to play the captured France vs England match beat by beat. Reset rewinds the timeline; settled points stay on the board."}
           </p>
           {demo.nextLabel && !demo.done ? (
             <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
