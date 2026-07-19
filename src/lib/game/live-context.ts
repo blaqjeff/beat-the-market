@@ -744,6 +744,19 @@ export function buildLiveBoard(input: {
     series,
   });
 
+  // Keep the graph tip aligned with the live meter (odds bias + recency weights).
+  const tip = {
+    minute: clock.minutes,
+    balance: momentum.balance,
+    tempoScore: momentum.tempoScore,
+  };
+  if (series.length === 0) {
+    series.push({ minute: 0, balance: 0, tempoScore: 0 }, tip);
+  } else {
+    series[series.length - 1] = tip;
+  }
+  momentum.series = series;
+
   return {
     score,
     clock,
