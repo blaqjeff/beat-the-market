@@ -20,6 +20,7 @@ Confidence credits and points have **no cash value**. This is not a betting book
 | [docs/TECHNICAL.md](docs/TECHNICAL.md) | Product technical documentation (ASD-STE100 style) |
 | [docs/TXLINE.md](docs/TXLINE.md) | TxLINE endpoints, worker, proofs |
 | [docs/BUSINESS.md](docs/BUSINESS.md) | Commercial path (leagues) |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | Production deploy (Vercel + Neon + Fly worker) |
 
 **Submission tip:** Use the GitHub URL for `docs/TECHNICAL.md` as your product
 technical documentation link. Keep docs in this repo so judges open one place
@@ -40,6 +41,14 @@ with no extra login.
 - Asian handicap (`ASIANHANDICAP_PARTICIPANT_GOALS`), full match and first half
 
 Call prices always use the TxLINE consensus book (`BookmakerId` 10021).
+
+## Production deploy
+
+Free stack: **Vercel** (app) + **Neon** (Postgres) + **Fly.io** (ingestion worker).
+
+Do not run the practice cinema on production. Do not set `DEMO_CINEMA`.
+
+Full steps: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Local development
 

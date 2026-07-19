@@ -1,0 +1,18 @@
+# Fly.io app for the TxLINE ingestion worker (long-lived SSE).
+# fly auth login
+# fly launch --config fly.worker.toml --no-deploy
+# fly secrets set ...
+# fly deploy --config fly.worker.toml
+
+app = "beat-the-market-worker"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile.worker"
+
+[env]
+  NODE_ENV = "production"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

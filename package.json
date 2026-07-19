@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint src tests scripts --max-warnings 0 --ignore-pattern scripts/polyfill-server-only.cjs",
     "test": "vitest run",

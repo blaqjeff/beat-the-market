@@ -60,6 +60,7 @@ next-env.d.ts
 !/docs/TECHNICAL.md
 !/docs/TXLINE.md
 !/docs/BUSINESS.md
+!/docs/DEPLOY.md
 AGENTS.md
 CLAUDE.md
 
@@ -70,3 +71,9 @@ tmp/
 .tmp-lock/
 node_modules_old/
 *.local.json
+
+.vercel
+.env*
+
+.tmp-prod-env.json
+.tmp/

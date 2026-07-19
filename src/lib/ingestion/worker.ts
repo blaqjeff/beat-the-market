@@ -250,6 +250,20 @@ export async function startIngestionWorker() {
     );
   }
 
+  if (env.NODE_ENV === "production") {
+    // Never leave demo cinema mode active against a live database.
+    await upsertFeedCursor("odds", {
+      status: "starting",
+      mode: "live",
+      lastError: null,
+    });
+    await upsertFeedCursor("scores", {
+      status: "starting",
+      mode: "live",
+      lastError: null,
+    });
+  }
+
   logInfo("ingestion.worker.start", {
     network: env.TXLINE_NETWORK,
     competitions: competitionIds(),
