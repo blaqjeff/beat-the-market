@@ -1,38 +1,30 @@
 import { listFeedCursors } from "@/lib/ingestion/cursors";
-import { prisma } from "@/lib/db/prisma";
 
 export async function FeedStatusBanner() {
   let cursors: Awaited<ReturnType<typeof listFeedCursors>> = [];
-  let staleMarkets = 0;
 
   try {
-    [cursors, staleMarkets] = await Promise.all([
-      listFeedCursors(),
-      prisma().market.count({ where: { availability: "stale" } }),
-    ]);
+    cursors = await listFeedCursors();
   } catch {
     return null;
   }
 
-  if (cursors.length === 0 && staleMarkets === 0) {
+  if (cursors.length === 0) {
     return null;
   }
 
-  // Show only lasting reconnect/error states (not a brief "starting" blip).
   const reconnecting = cursors.filter(
     (cursor) => cursor.status === "reconnecting" || cursor.status === "error"
   );
   const replay = cursors.some((cursor) => cursor.mode === "replay");
 
-  // Healthy live feed — stay quiet. Only surface lasting degraded states.
+  // Homepage stays quiet when the live feed is healthy. Per-market stale
+  // prices already show as "Updating" on match boards / block calls.
   let label: string | null = null;
   let tone = "text-[color:var(--muted)] border-[color:var(--line)]";
 
   if (reconnecting.length > 0) {
     label = "Prices are reconnecting — boards may lag briefly";
-    tone = "text-amber-200 border-amber-800/60 bg-amber-950/30";
-  } else if (staleMarkets > 0) {
-    label = "Some prices are updating — refresh if a board looks off";
     tone = "text-amber-200 border-amber-800/60 bg-amber-950/30";
   } else if (replay) {
     label = "Demo board — replay prices for testing";
