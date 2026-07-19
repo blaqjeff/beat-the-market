@@ -19,26 +19,29 @@ This is a free skill game. Confidence credits and points have no cash value.
 
 ## Current status
 
-Phases **0–6 complete**. Phase 7 (submission readiness: deploy, docs polish,
-demo video) is next.
+Phases **0–6 complete**, plus core ops hardening (auto-settle, fixture sync,
+Merkle path checks, account linking). Phase 7 (public deploy + demo video)
+remains for submission.
 
 | Phase | Status | What shipped |
 | --- | --- | --- |
 | 0 Feed discovery | Done | WC fixtures, odds/scores catalogue, SSE probes, validation proof fetch. Goalscorer/assist unavailable on current payloads. |
-| 1 Foundation | Done | App shell, Postgres, email (SendByte) + Phantom wallet auth, health, CI. |
-| 2 Ingestion | Done | Normalize/persist, SSE worker, deterministic replay, feed health. |
+| 1 Foundation | Done | App shell, Postgres, email (SendByte) + Phantom wallet auth (linkable), health, CI. |
+| 2 Ingestion | Done | Normalize/persist, SSE worker, fixture catalogue sync, auto-settle on FT, deterministic replay. |
 | 3 Pre-match game | Done | 1000 credits/match, market board, atomic call placement. |
 | 4 Live match centre | Done | Score/clock/timeline, in-play markets, polling, frozen live context. |
-| 5 Settlement | Done | Deterministic settle, receipts, point ledger, TxLINE proof + Solana PDA refs. |
-| 6 Competition | Done | Rankings, profiles, private leagues, remarkable-call share cards. |
+| 5 Settlement | Done | Deterministic settle, receipts, point ledger, TxLINE proof + local Merkle paths + Solana PDA refs. |
+| 6 Competition | Done | Rankings, profiles, private leagues, PnL share cards. |
+| 7 Deploy | Next | Hosted URL, managed DB, always-on worker, submission package. |
 
 ## Product loop
 
 1. Sign in (email magic link or Phantom).
 2. Open a match → spend confidence credits on 1X2 or totals at TxLINE %.
 3. During play, markets and probabilities update without a full page reload.
-4. After `game_finalised`, settle the fixture → receipts + leaderboard points.
-5. Trace points on your profile; share remarkable wins; optional private leagues.
+4. After `game_finalised`, settlement runs automatically from the ingestion worker
+   (or manually via `settlement:run`) → receipts + leaderboard points.
+5. Trace points on your profile; share PnL cards; optional private leagues.
 
 Supported call markets today: `1X2_PARTICIPANT_RESULT` and full-match
 `OVERUNDER_PARTICIPANT_GOALS` (pre-match and in-play when TxLINE publishes
@@ -48,7 +51,7 @@ Supported call markets today: `1X2_PARTICIPANT_RESULT` and full-match
 
 ### Prerequisites
 
-- Node.js 22+
+- Node.js 24+
 - Docker Desktop (for local Postgres)
 
 ### Setup
@@ -111,11 +114,15 @@ Health endpoint: `GET /api/health`
 # Deterministic replay from captured fixtures (same path as live)
 npm run ingestion:replay -- 18257865 72
 
-# Live SSE worker (odds + scores, reconnect with backoff)
+# Live SSE worker (odds + scores + fixture sync + auto-settle on FT)
 npm run ingestion:worker
 ```
 
+See [docs/TXLINE.md](docs/TXLINE.md) for feed, proof, and competition ID details.
+
 ### Settlement
+
+Live worker auto-settles after `game_finalised`. Manual still works for replay:
 
 ```bash
 npm run settlement:run -- 18257865
@@ -144,7 +151,7 @@ Server-only secrets must never use `NEXT_PUBLIC_` names. See `.env.example` for:
 | `/leaderboard` | Global rankings (documented tie-break) |
 | `/profile/[username]` | Stats + receipt trail |
 | `/receipts/[callId]` | Settlement receipt + proof refs |
-| `/share/calls/[callId]` | Public card for remarkable wins only |
+| `/share/calls/[callId]` | Downloadable PnL share card for winning calls |
 | `/leagues` | Create / join private leagues |
 | `/leagues/[inviteCode]` | League board |
 

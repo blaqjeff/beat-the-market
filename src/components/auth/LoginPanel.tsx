@@ -47,7 +47,7 @@ export function LoginPanel({
       const response = await fetch("/api/auth/email/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, link: true }),
       });
       const payload = (await response.json()) as {
         delivered?: boolean;
@@ -112,15 +112,20 @@ export function LoginPanel({
           publicKey,
           nonce: challenge.nonce,
           signature: bs58.encode(signatureBytes),
+          link: true,
         }),
       });
       const verified = (await verifyResponse.json()) as {
         error?: { message?: string };
+        linked?: boolean;
       };
       if (!verifyResponse.ok) {
         throw new Error(verified.error?.message ?? "Wallet verification failed");
       }
 
+      if (verified.linked) {
+        setMessage("Wallet linked to your account.");
+      }
       router.replace("/");
       router.refresh();
     } catch (caught) {

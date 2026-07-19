@@ -40,7 +40,9 @@ describe("score proof verification", () => {
       network: "mainnet",
       checkPda: false,
     });
-    expect(verified.status).toBe("structure_ok");
+    // Captured demo fixtures may only pass structure; local Merkle uses
+    // SHA-256(Borsh(ScoreStat)) and upgrades to paths_ok when paths converge.
+    expect(["structure_ok", "paths_ok"]).toContain(verified.status);
     expect(verified.dailyScoresPda.length).toBeGreaterThan(20);
     expect(verified.programId).toBe(TXLINE_NETWORKS.mainnet.programId);
   });

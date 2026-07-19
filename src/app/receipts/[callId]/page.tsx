@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 function proofStatusLabel(status: string) {
   if (status === "pda_found") return "Verified on Solana";
+  if (status === "paths_ok") return "Merkle paths verified";
   if (status === "structure_ok") return "Proof attached";
   if (status === "fetched") return "Proof fetched";
   if (status === "failed") return "Proof failed";

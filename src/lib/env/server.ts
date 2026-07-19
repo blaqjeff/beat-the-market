@@ -38,6 +38,16 @@ const serverEnvSchema = z
       .int()
       .positive()
       .default(15_000),
+    /** Comma-separated TxLINE competition IDs for fixture catalogue sync. */
+    TXLINE_COMPETITION_IDS: z
+      .preprocess(
+        (value) =>
+          typeof value === "string" && value.trim().length === 0
+            ? undefined
+            : value,
+        z.string().optional()
+      )
+      .default("72"),
   })
   .superRefine((env, context) => {
     const hasJwt = Boolean(env.TXLINE_GUEST_JWT);

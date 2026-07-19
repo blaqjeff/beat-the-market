@@ -22,7 +22,10 @@ import { verifyScoreProofAgainstSolana } from "@/lib/txline/verify-proof";
 import { logInfo, logWarn } from "@/lib/logging/logger";
 import type { Prisma } from "@/generated/prisma/client";
 
-function isFinalAction(action: string, gameState: string | null): boolean {
+export function isFinalMatchEvent(
+  action: string,
+  gameState: string | null
+): boolean {
   const a = action.toLowerCase();
   const g = (gameState ?? "").toLowerCase();
   return (
@@ -224,7 +227,7 @@ export async function settleFixture(input: {
   const finalEvent =
     [...fixture.matchEvents]
       .reverse()
-      .find((event) => isFinalAction(event.action, event.gameState)) ?? null;
+      .find((event) => isFinalMatchEvent(event.action, event.gameState)) ?? null;
 
   if (live.phase !== "finished" && !finalEvent) {
     throw new AppError(

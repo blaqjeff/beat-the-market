@@ -62,6 +62,7 @@ enum ProofVerifyStatus {
   none
   fetched
   structure_ok
+  paths_ok
   pda_found
   failed
 }

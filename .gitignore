@@ -55,7 +55,8 @@ next-env.d.ts
 /src/generated/
 
 # internal planning docs (not for public repo)
-/docs/
+/docs/*
+!/docs/TXLINE.md
 AGENTS.md
 CLAUDE.md
 

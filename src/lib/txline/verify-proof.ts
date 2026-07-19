@@ -5,6 +5,7 @@ import {
   TXLINE_NETWORKS,
   type TxlineNetwork,
 } from "@/lib/txline/constants";
+import { verifyStatMerklePaths } from "@/lib/txline/merkle";
 
 const byteArraySchema = z.array(z.number().int().min(0).max(255));
 
@@ -35,6 +36,7 @@ export const scoreValidationPayloadSchema = z
           })
           .passthrough()
           .optional(),
+        eventStatsSubTreeRoot: byteArraySchema.length(32).optional(),
       })
       .passthrough()
       .optional(),
@@ -52,6 +54,7 @@ export type ProofVerifyStatus =
   | "none"
   | "fetched"
   | "structure_ok"
+  | "paths_ok"
   | "pda_found"
   | "failed";
 
@@ -118,6 +121,31 @@ export function inspectProofStructure(payload: unknown): {
   };
 }
 
+function localMerkleStatus(parsed: ScoreValidationPayload): {
+  pathsOk: boolean;
+  detail: string;
+} {
+  if (!parsed.statProofs?.length) {
+    return {
+      pathsOk: false,
+      detail: "No statProofs available for local Merkle walk",
+    };
+  }
+  try {
+    const result = verifyStatMerklePaths({
+      statsToProve: parsed.statsToProve,
+      statProofs: parsed.statProofs,
+      eventStatRoot: parsed.eventStatRoot,
+    });
+    return { pathsOk: result.ok, detail: result.detail };
+  } catch (error) {
+    return {
+      pathsOk: false,
+      detail: error instanceof Error ? error.message : "Merkle walk failed",
+    };
+  }
+}
+
 export async function verifyScoreProofAgainstSolana(input: {
   payload: unknown;
   network: TxlineNetwork;
@@ -149,11 +177,17 @@ export async function verifyScoreProofAgainstSolana(input: {
   const epochDay = epochDayFromProofTimestamp(proofTs);
   const programId = TXLINE_NETWORKS[input.network].programId;
   const dailyScoresPda = deriveDailyScoresPda(programId, epochDay).toBase58();
+  const merkle = localMerkleStatus(structure.parsed);
+
+  let status: ProofVerifyStatus = merkle.pathsOk ? "paths_ok" : "structure_ok";
+  const detail = merkle.pathsOk
+    ? `${structure.detail}; ${merkle.detail}`
+    : `${structure.detail}; local Merkle: ${merkle.detail}`;
 
   if (!input.checkPda) {
     return {
-      status: "structure_ok",
-      detail: `${structure.detail}; PDA ${dailyScoresPda} (RPC check skipped)`,
+      status,
+      detail: `${detail}; PDA ${dailyScoresPda} (RPC check skipped)`,
       proofTs,
       epochDay,
       programId,
@@ -173,8 +207,8 @@ export async function verifyScoreProofAgainstSolana(input: {
     );
     if (!info) {
       return {
-        status: "structure_ok",
-        detail: `${structure.detail}; daily scores PDA not found on ${input.network}`,
+        status,
+        detail: `${detail}; daily scores PDA not found on ${input.network}`,
         proofTs,
         epochDay,
         programId,
@@ -182,9 +216,13 @@ export async function verifyScoreProofAgainstSolana(input: {
         parsed: structure.parsed,
       };
     }
+    // PDA existence is a stronger ops signal; keep paths_ok if merkle already passed.
+    if (status !== "paths_ok") {
+      status = "pda_found";
+    }
     return {
-      status: "pda_found",
-      detail: `${structure.detail}; daily scores PDA exists (${info.data.length} bytes)`,
+      status: status === "paths_ok" ? "paths_ok" : "pda_found",
+      detail: `${detail}; daily scores PDA exists (${info.data.length} bytes)`,
       proofTs,
       epochDay,
       programId,
@@ -193,8 +231,8 @@ export async function verifyScoreProofAgainstSolana(input: {
     };
   } catch (error) {
     return {
-      status: "structure_ok",
-      detail: `${structure.detail}; Solana RPC check failed: ${
+      status,
+      detail: `${detail}; Solana RPC check failed: ${
         error instanceof Error ? error.message : "unknown error"
       }`,
       proofTs,

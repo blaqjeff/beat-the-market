@@ -51,7 +51,8 @@ export async function createWalletChallenge(rawPublicKey: string) {
 export async function verifyWalletSignIn(
   rawPublicKey: string,
   nonce: string,
-  signatureBase58: string
+  signatureBase58: string,
+  options?: { linkToUserId?: string }
 ) {
   let publicKey: string;
   try {
@@ -111,7 +112,26 @@ export async function verifyWalletSignIn(
     });
 
     if (identity) {
+      if (options?.linkToUserId && identity.userId !== options.linkToUserId) {
+        throw new AppError(
+          "conflict",
+          "That wallet is already linked to another account"
+        );
+      }
       return identity.user;
+    }
+
+    if (options?.linkToUserId) {
+      await tx.authIdentity.create({
+        data: {
+          userId: options.linkToUserId,
+          provider: "solana",
+          providerAccountId: publicKey,
+        },
+      });
+      return tx.user.findUniqueOrThrow({
+        where: { id: options.linkToUserId },
+      });
     }
 
     return tx.user.create({
@@ -129,6 +149,10 @@ export async function verifyWalletSignIn(
   });
 
   await createSession(user.id);
-  logInfo("auth.wallet.verified", { userId: user.id, publicKey });
+  logInfo("auth.wallet.verified", {
+    userId: user.id,
+    publicKey,
+    linked: Boolean(options?.linkToUserId),
+  });
   return user;
 }

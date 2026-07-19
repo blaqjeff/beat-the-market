@@ -16,10 +16,31 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
-export async function requestEmailSignIn(rawEmail: string) {
+export async function requestEmailSignIn(
+  rawEmail: string,
+  options?: { linkToUserId?: string }
+) {
   const email = normalizeEmail(rawEmail);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new AppError("validation", "Enter a valid email address");
+  }
+
+  if (options?.linkToUserId) {
+    const taken = await prisma().user.findUnique({ where: { email } });
+    if (taken && taken.id !== options.linkToUserId) {
+      throw new AppError("conflict", "That email is already linked to another account");
+    }
+    const identity = await prisma().authIdentity.findUnique({
+      where: {
+        provider_providerAccountId: {
+          provider: "email",
+          providerAccountId: email,
+        },
+      },
+    });
+    if (identity && identity.userId !== options.linkToUserId) {
+      throw new AppError("conflict", "That email is already linked to another account");
+    }
   }
 
   const token = randomToken(32);
@@ -29,6 +50,7 @@ export async function requestEmailSignIn(rawEmail: string) {
       email,
       tokenHash: hashToken(token),
       expiresAt,
+      userId: options?.linkToUserId,
     },
   });
 
@@ -39,9 +61,6 @@ export async function requestEmailSignIn(rawEmail: string) {
   const link = verifyUrl.toString();
 
   if (hasEmailDelivery()) {
-    // Keep anchor text as a CTA (not a raw URL). SendByte flags
-    // link_text_mismatch when long query-string URLs are used as both href and
-    // visible text, and & in query strings is unsafe inside HTML attributes.
     const href = link.replace(/&/g, "&amp;");
     await sendTransactionalEmail({
       to: email,
@@ -65,7 +84,6 @@ export async function requestEmailSignIn(rawEmail: string) {
     return { delivered: true as const };
   }
 
-  // Dev-only escape hatch when no email provider key is configured at all.
   if (serverEnv().NODE_ENV === "production") {
     throw new AppError("internal", "Email delivery is not configured");
   }
@@ -111,7 +129,41 @@ export async function verifyEmailSignIn(signedToken: string, code: string) {
     });
 
     if (identity) {
+      if (magicLink.userId && identity.userId !== magicLink.userId) {
+        throw new AppError(
+          "conflict",
+          "That email is already linked to another account"
+        );
+      }
       return identity.user;
+    }
+
+    if (magicLink.userId) {
+      const linkTarget = await tx.user.findUnique({
+        where: { id: magicLink.userId },
+      });
+      if (!linkTarget) {
+        throw new AppError("conflict", "Account to link no longer exists");
+      }
+      const emailOwner = await tx.user.findUnique({ where: { email } });
+      if (emailOwner && emailOwner.id !== linkTarget.id) {
+        throw new AppError(
+          "conflict",
+          "That email is already linked to another account"
+        );
+      }
+      await tx.user.update({
+        where: { id: linkTarget.id },
+        data: { email },
+      });
+      await tx.authIdentity.create({
+        data: {
+          userId: linkTarget.id,
+          provider: "email",
+          providerAccountId: email,
+        },
+      });
+      return tx.user.findUniqueOrThrow({ where: { id: linkTarget.id } });
     }
 
     const existingByEmail = await tx.user.findUnique({ where: { email } });
