@@ -1,51 +1,44 @@
 # Business model
 
-Beat the Market is a free skill game (confidence credits, no cash wagering).
-Revenue sits on **competition hosting**, not on user stakes.
+Beat the Market is a free skill game. Users spend confidence credits. Credits
+and points have no cash value.
 
-## Primary path: leagues as a product
+Revenue comes from **competition hosting**, not from user stakes.
 
-### 1. Free — personal & friend leagues (live today)
+## 1. Free leagues (available now)
 
-Anyone can create invite-only leagues and compete on the same settlement rules
-as the global board. This is the growth loop: play → share PnL → invite friends.
+Users create invite-only leagues. Ranking uses the same settlement rules as the
+global board.
 
-### 2. Premium leagues (next)
+## 2. Premium leagues (planned)
 
 Paid hosts unlock:
 
-- Custom ranking rules (e.g. live-only calls, underdog bonuses, fixture filters)
-- Private branded naming and invite controls
-- Season windows and pinned leaderboards
-- Export / sponsor reporting
+- custom ranking rules
+- season windows
+- private branding controls
+- export and sponsor reporting
 
-Sold to creators, communities, and offices running World Cup pools without
-spreadsheets.
+## 3. Branded and sponsored leagues (B2B)
 
-### 3. Branded & sponsored leagues (B2B)
+Brands pay to host a competition with:
 
-Brands (drinks, telcos, clubs, media) pay to host a competition:
+- co-branded league hub and leaderboard
+- sponsor slots on match centre and share cards
+- brand-funded prizes (skill play only)
 
-- Co-branded league hub + leaderboard
-- Sponsor placements on match centre and shareable PnL cards
-- Optional prize fulfillment funded by the brand (we stay non-wagering)
-- Rules pack aligned to their campaign (markets allowed, entry window, etc.)
+Pitch: own a confidence league for your fans. TxLINE prices the calls. We settle
+and rank.
 
-Pitch: *“Own a confidence league for your fans during the tournament — we
-supply TxLINE-priced calls, settlement, and rankings.”*
+On `/leagues`, **Request a branded league** opens a GitHub partnership issue.
 
-Inquiry CTA on `/leagues`: **Request a branded league** opens a GitHub issue
-template (`partnership` label). Swap to a partners email when you have one.
+## Later: white-label
 
-## Later channel: white-label
+A partner can run a branded app on their domain. Same engine, different skin.
+This is not required for the first commercial step.
 
-A fully branded standalone app (custom domain, theme, auth) for partners who
-want Beat the Market as *their* product. Same engine; different skin and ops
-contract. Not required for v1 monetization — premium/branded leagues come first.
+## Why this fits
 
-## Why this fits the product
-
-- Leagues, receipts, and share cards already exist
-- TxLINE consensus pricing is the differentiator brands can’t fake with a
-  spreadsheet
-- Clear compliance story: skill/engagement product, not a betting book
+- Leagues, receipts, and share cards already exist.
+- TxLINE consensus pricing is hard to copy with a spreadsheet.
+- The product stays a skill game, not a betting book.

@@ -54,10 +54,11 @@ next-env.d.ts
 # prisma generated client
 /src/generated/
 
-# internal planning docs (not for public repo)
+# Keep internal planning docs out of the public tree by default.
+# Public product docs are allow-listed below.
 /docs/*
+!/docs/TECHNICAL.md
 !/docs/TXLINE.md
-!/docs/CRITERIA_UPGRADES.md
 !/docs/BUSINESS.md
 AGENTS.md
 CLAUDE.md

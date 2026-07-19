@@ -1,24 +1,23 @@
-# TxLINE integration notes
+# TxLINE integration
 
-Beat the Market reads consensus odds, live scores, and Solana-anchored
-validation proofs from TxLINE (TxODDS).
+Beat the Market reads fixtures, consensus odds, scores, and validation proofs
+from TxLINE (TxODDS).
 
 ## Credentials
 
-Server-only (never `NEXT_PUBLIC_`):
+Server-only (never use `NEXT_PUBLIC_`):
 
 - `TXLINE_GUEST_JWT`
 - `TXLINE_API_TOKEN`
 - `TXLINE_NETWORK` — `mainnet` or `devnet`
-- optional `TXLINE_API_ORIGIN` override
-- optional `SOLANA_RPC_URL` for PDA existence checks during settlement
+- optional `TXLINE_API_ORIGIN`
+- optional `SOLANA_RPC_URL` for PDA checks during settlement
 
-Create credentials via local setup at `/setup/txline` (localhost/dev only) or
-your TxLINE activation flow.
+Local activation: `/setup/txline` (development / localhost only).
 
 ## Streams
 
-| Stream | Worker handler | Persist |
+| Stream | Handler | Store |
 | --- | --- | --- |
 | Odds SSE | `handleOddsMessage` | `persistOddsRow` |
 | Scores SSE | `handleScoresMessage` | `persistMatchEvent` |
@@ -31,73 +30,77 @@ npm run ingestion:worker
 
 The worker also:
 
-1. Marks stale markets every 5s
-2. Syncs fixture catalogues every 2 minutes for `TXLINE_COMPETITION_IDS` (default `72`)
-3. Auto-settles a fixture ~8s after a new `game_finalised` / finished event
+1. Marks stale markets every 5 seconds.
+2. Syncs fixtures every 2 minutes for `TXLINE_COMPETITION_IDS` (default `72`).
+3. Auto-settles about 8 seconds after a finished match event.
 
-## Replay / demo
+## Endpoints used
 
-Captured fixtures live under `tests/fixtures/txline/`.
+- `GET /api/fixtures/snapshot`
+- `GET /api/odds/snapshot/{fixtureId}`
+- `GET /api/scores/snapshot/{fixtureId}`
+- `GET /api/odds/stream` and `GET /api/scores/stream` (SSE)
+- Score validation / stat-validation proof fetch
+- Solana `txoracle` daily scores PDA (optional)
+
+## Capture and replay
+
+Captured samples live under `tests/fixtures/txline/`.
 
 ```bash
-npm run ingestion:replay -- 18257865 72
-npm run settlement:run -- 18257865
+npm run txline:capture -- fixtures 72
+npm run txline:capture -- odds <fixtureId>
+npm run txline:capture -- scores <fixtureId>
+npm run ingestion:replay -- <fixtureId> 72
 ```
 
-Replay remains the reliable hackathon demo path when live credentials or WC
-schedules are unavailable.
+## Practice demo (cinema)
+
+For video recording without a live kickoff:
+
+```bash
+npm run demo:cinema
+# open /matches/18257865 — Advance match / Settle on the yellow bar
+```
+
+The cinema script is a local practice path. It uses the same persist and settle
+code as live. It is not a live TxLINE score stream.
+
+Full demo steps: [README.md](../README.md#reproduce-the-demo-recording-practice-match)
+and [TECHNICAL.md](./TECHNICAL.md).
 
 ## Validation proofs
 
 Settlement calls `ensureScoreProof`, which:
 
-1. Fetches `/api/scores/validation` when credentials exist, else loads a captured fixture JSON
-2. Validates payload structure (Zod)
-3. Locally walks Merkle `statProofs` with SHA-256 over Borsh `ScoreStat` leaves
-4. Optionally checks that the `daily_scores_roots` PDA exists on Solana
-
-Statuses:
+1. Fetches validation data when credentials exist, else uses a captured JSON file.
+2. Checks payload structure.
+3. Walks Merkle `statProofs` locally.
+4. Optionally checks that the daily scores PDA exists on Solana.
 
 | Status | Meaning |
 | --- | --- |
-| `structure_ok` | Schema + paths present |
+| `structure_ok` | Schema and paths present |
 | `paths_ok` | Local Merkle walk converges |
-| `pda_found` | Daily scores PDA account exists (RPC) |
-| `failed` | Unusable payload |
-
-Full on-chain root slot decoding (5-minute batch index) is still operator/RPC
-dependent; local path verification does not require a live chain.
+| `pda_found` | Daily scores PDA account exists |
+| `failed` | Payload not usable |
 
 ## Supported markets
 
-Call placement supports:
+- `1X2_PARTICIPANT_RESULT` (full match and `half=1`)
+- `OVERUNDER_PARTICIPANT_GOALS` (full match and `half=1`)
+- `ASIANHANDICAP_PARTICIPANT_GOALS` (full match and `half=1`)
 
-- `1X2_PARTICIPANT_RESULT` (full match + `MarketPeriod=half=1`)
-- `OVERUNDER_PARTICIPANT_GOALS` (full match + `half=1`)
-- `ASIANHANDICAP_PARTICIPANT_GOALS` (full match + `half=1`)
+First-half markets settle on the half-time score when available. Goalscorer
+markets stay closed until TxLINE publishes them.
 
-First-half markets settle on the half-time score snapshot (or last ≤45′
-score / period keys `1001`/`1002` when published). Goalscorer markets stay
-unavailable until TxLINE publishes them.
+## Board extras
 
-## Live board extras
+Score `Stats` keys feed goals, cards, and corners into:
 
-Score `Stats` keys 1–8 feed goals, yellow/red cards, and corners into:
+- timeline
+- momentum meter
+- home board scorelines
 
-- match timeline moments
-- the momentum / tempo meter (plus 1X2 consensus drift)
-- home World Cup board scorelines
-
-Multiple `Bookmaker` rows on the same market key power the bookmaker spread UI.
-Call pricing always uses the TxLINE consensus book (`BookmakerId` 10021).
-
-## Past-match cinema (demo recording)
-
-```bash
-npm run demo:cinema                 # reset France vs England to prematch
-# open /matches/18257865 — use Advance match / Settle on the demo bar
-npm run demo:cinema -- advance
-npm run demo:cinema -- settle
-```
-
-Script: `tests/fixtures/txline/demo.18257865.beats.json`
+Several bookmaker rows power the bookmaker spread UI. Call pricing always uses
+consensus book `10021`.
