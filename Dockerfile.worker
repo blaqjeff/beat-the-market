@@ -13,7 +13,9 @@ COPY scripts ./scripts
 COPY src ./src
 COPY tsconfig.json ./
 
-RUN npm ci
+# Prefer install over ci: optional native deps (bufferutil/utf-8-validate)
+# differ across platforms and can break `npm ci` on Linux builders.
+RUN npm install --include=dev
 
 ENV NODE_ENV=production
 
