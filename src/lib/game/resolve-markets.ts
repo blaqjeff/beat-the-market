@@ -1,3 +1,5 @@
+import { isFirstHalfMarketPeriod } from "@/lib/game/side-stats";
+
 export type MarketResolution =
   | { status: "decided"; winningOutcomeKey: string }
   | { status: "void"; reason: string };
@@ -62,18 +64,122 @@ export function resolveOverUnder(input: {
     : { status: "decided", winningOutcomeKey: "under" };
 }
 
-export function resolveMarket(input: {
-  superOddsType: string;
-  marketParameters: string | null;
+function quarterHalfLines(line: number): [number, number] | null {
+  const absFrac = Number((Math.abs(line) % 1).toFixed(2));
+  if (absFrac !== 0.25 && absFrac !== 0.75) return null;
+  const sign = line < 0 ? -1 : 1;
+  const abs = Math.abs(line);
+  if (absFrac === 0.25) {
+    return [sign * (Math.floor(abs) + 0), sign * (Math.floor(abs) + 0.5)];
+  }
+  return [sign * (Math.floor(abs) + 0.5), sign * (Math.floor(abs) + 1)];
+}
+
+/**
+ * Asian handicap on part1. Pushes (including quarter-line half-results) void.
+ */
+export function resolveAsianHandicap(input: {
   homeScore: number;
   awayScore: number;
   participant1IsHome: boolean;
+  marketParameters: string | null;
 }): MarketResolution {
+  const line = parseLineParameter(input.marketParameters);
+  if (line === null) {
+    return { status: "void", reason: "Missing or invalid handicap line" };
+  }
+
+  const p1 = input.participant1IsHome ? input.homeScore : input.awayScore;
+  const p2 = input.participant1IsHome ? input.awayScore : input.homeScore;
+
+  const halves = quarterHalfLines(line);
+  if (halves) {
+    const results = halves.map((half) => {
+      const margin = p1 + half - p2;
+      if (margin === 0) return "push" as const;
+      return margin > 0 ? ("part1" as const) : ("part2" as const);
+    });
+    if (results[0] === "push" || results[1] === "push") {
+      return {
+        status: "void",
+        reason: `Handicap push on quarter line ${line}`,
+      };
+    }
+    if (results[0] !== results[1]) {
+      return {
+        status: "void",
+        reason: `Handicap split result on quarter line ${line}`,
+      };
+    }
+    return { status: "decided", winningOutcomeKey: results[0]! };
+  }
+
+  const margin = p1 + line - p2;
+  if (margin === 0) {
+    return { status: "void", reason: `Handicap push on line ${line}` };
+  }
+  return margin > 0
+    ? { status: "decided", winningOutcomeKey: "part1" }
+    : { status: "decided", winningOutcomeKey: "part2" };
+}
+
+export function resolveMarket(input: {
+  superOddsType: string;
+  marketParameters: string | null;
+  marketPeriod?: string | null;
+  homeScore: number;
+  awayScore: number;
+  participant1IsHome: boolean;
+  /** Required when marketPeriod is first-half. */
+  firstHalfHomeScore?: number | null;
+  firstHalfAwayScore?: number | null;
+}): MarketResolution {
+  const period = input.marketPeriod ?? null;
+  let homeScore = input.homeScore;
+  let awayScore = input.awayScore;
+
+  if (isFirstHalfMarketPeriod(period)) {
+    if (
+      input.firstHalfHomeScore === null ||
+      input.firstHalfHomeScore === undefined ||
+      input.firstHalfAwayScore === null ||
+      input.firstHalfAwayScore === undefined
+    ) {
+      return {
+        status: "void",
+        reason: "Missing first-half score for period market",
+      };
+    }
+    homeScore = input.firstHalfHomeScore;
+    awayScore = input.firstHalfAwayScore;
+  } else if (period) {
+    return {
+      status: "void",
+      reason: `Unsupported market period ${period}`,
+    };
+  }
+
   if (input.superOddsType === "1X2_PARTICIPANT_RESULT") {
-    return resolve1x2(input);
+    return resolve1x2({
+      homeScore,
+      awayScore,
+      participant1IsHome: input.participant1IsHome,
+    });
   }
   if (input.superOddsType === "OVERUNDER_PARTICIPANT_GOALS") {
-    return resolveOverUnder(input);
+    return resolveOverUnder({
+      homeScore,
+      awayScore,
+      marketParameters: input.marketParameters,
+    });
+  }
+  if (input.superOddsType === "ASIANHANDICAP_PARTICIPANT_GOALS") {
+    return resolveAsianHandicap({
+      homeScore,
+      awayScore,
+      participant1IsHome: input.participant1IsHome,
+      marketParameters: input.marketParameters,
+    });
   }
   return {
     status: "void",

@@ -11,19 +11,41 @@ export function outcomeLabel(
   return key;
 }
 
+function periodPrefix(marketPeriod: string | null = null): string {
+  if (!marketPeriod) return "";
+  const normalized = marketPeriod.trim().toLowerCase();
+  if (
+    normalized === "half=1" ||
+    normalized === "1" ||
+    normalized === "first_half" ||
+    normalized === "1h"
+  ) {
+    return "1st half · ";
+  }
+  return `${marketPeriod} · `;
+}
+
 export function marketLabel(
   type: string,
-  parameters: string | null = null
+  parameters: string | null = null,
+  marketPeriod: string | null = null
 ): string {
-  if (type === "1X2_PARTICIPANT_RESULT") return "Match result";
-  if (type === "OVERUNDER_PARTICIPANT_GOALS") {
-    const line = parameters?.replace("line=", "").trim();
-    return line ? `Total goals ${line}` : "Total goals";
+  const prefix = periodPrefix(marketPeriod);
+  if (type === "1X2_PARTICIPANT_RESULT") {
+    return `${prefix}${marketPeriod ? "Result" : "Match result"}`;
   }
-  return type
+  if (type === "OVERUNDER_PARTICIPANT_GOALS") {
+    const line = parameters?.replace(/^line=/i, "").trim();
+    return `${prefix}${line ? `Total goals ${line}` : "Total goals"}`;
+  }
+  if (type === "ASIANHANDICAP_PARTICIPANT_GOALS") {
+    const line = parameters?.replace(/^line=/i, "").trim();
+    return `${prefix}${line ? `Handicap ${line}` : "Asian handicap"}`;
+  }
+  return `${prefix}${type
     .replaceAll("_", " ")
     .toLowerCase()
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+    .replace(/\b\w/g, (char) => char.toUpperCase())}`;
 }
 
 export function phaseLabel(phase: string): string {

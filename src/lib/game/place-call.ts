@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { ensureMatchCredits } from "@/lib/game/credits";
 import { buildLiveBoard } from "@/lib/game/live-context";
+import { pickQuoteTrail } from "@/lib/game/odds-board";
 import {
   isSupportedCallMarket,
   potentialPoints,
@@ -61,7 +62,7 @@ export async function placeCall(input: PlaceCallInput) {
         },
         oddsSnapshots: {
           orderBy: { sourceTimestamp: "desc" },
-          take: 1,
+          take: 20,
         },
       },
     });
@@ -80,8 +81,8 @@ export async function placeCall(input: PlaceCallInput) {
       throw new AppError("validation", "Market is not available for calls");
     }
 
-    const replayMode = await tx.feedCursor.findFirst({
-      where: { mode: "replay" },
+    const demoFeed = await tx.feedCursor.findFirst({
+      where: { mode: { in: ["replay", "cinema"] } },
     });
 
     if (
@@ -115,12 +116,13 @@ export async function placeCall(input: PlaceCallInput) {
       );
     }
 
-    const latest = market.oddsSnapshots[0];
+    const latest = pickQuoteTrail(market.oddsSnapshots).latest;
     if (!latest) {
       throw new AppError("conflict", "No price is available for this market");
     }
 
-    if (!replayMode) {
+    // Cinema/replay use fixture timestamps, not wall-clock freshness.
+    if (!demoFeed) {
       const ageMs = Date.now() - Number(latest.sourceTimestamp);
       if (
         market.availability === "stale" ||
@@ -189,7 +191,7 @@ export async function placeCall(input: PlaceCallInput) {
         probabilityBps,
         multiplierMilli,
         potentialPoints: points,
-        sourceTimestamp: latest.sourceTimestamp,
+        sourceTimestamp: BigInt(latest.sourceTimestamp),
         homeScoreAtCall: live.score.home,
         awayScoreAtCall: live.score.away,
         matchMinuteAtCall: live.clock.minutes,

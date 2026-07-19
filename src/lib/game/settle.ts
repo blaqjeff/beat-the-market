@@ -282,9 +282,12 @@ export async function settleFixture(input: {
     const resolution = resolveMarket({
       superOddsType: call.market.superOddsType,
       marketParameters: call.market.marketParameters,
+      marketPeriod: call.market.marketPeriod,
       homeScore: live.score.home,
       awayScore: live.score.away,
       participant1IsHome: fixture.participant1IsHome,
+      firstHalfHomeScore: live.firstHalfScore?.home ?? null,
+      firstHalfAwayScore: live.firstHalfScore?.away ?? null,
     });
     const result = callResultFromResolution(call.outcomeKey, resolution);
     const pointsAwarded = pointsForResult(result, call.potentialPoints);
@@ -379,7 +382,11 @@ async function applyFirstSettlement(input: {
     probabilityBps: number;
     multiplierMilli: number;
     potentialPoints: number;
-    market: { superOddsType: string; marketParameters: string | null };
+    market: {
+      superOddsType: string;
+      marketParameters: string | null;
+      marketPeriod: string | null;
+    };
   };
   proofId: string | null;
   sourceSequence: number | null;
@@ -392,6 +399,7 @@ async function applyFirstSettlement(input: {
     finalAwayScore: input.live.score.away,
     marketType: input.call.market.superOddsType,
     marketParameters: input.call.market.marketParameters,
+    marketPeriod: input.call.market.marketPeriod,
     outcomeKey: input.call.outcomeKey,
     result: input.result,
     pointsAwarded: input.pointsAwarded,
@@ -515,7 +523,11 @@ async function applyCorrection(input: {
     settlementVersion: number;
     status: string;
     result: "won" | "lost" | "void" | null;
-    market: { superOddsType: string; marketParameters: string | null };
+    market: {
+      superOddsType: string;
+      marketParameters: string | null;
+      marketPeriod: string | null;
+    };
   };
   proofId: string | null;
   sourceSequence: number | null;
@@ -528,6 +540,7 @@ async function applyCorrection(input: {
     finalAwayScore: input.live.score.away,
     marketType: input.call.market.superOddsType,
     marketParameters: input.call.market.marketParameters,
+    marketPeriod: input.call.market.marketPeriod,
     outcomeKey: input.call.outcomeKey,
     result: input.nextResult,
     pointsAwarded: input.nextPoints,

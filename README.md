@@ -77,25 +77,30 @@ Sign in with:
 
 TxLINE activation (local only): [http://localhost:3000/setup/txline](http://localhost:3000/setup/txline)
 
-### Demo path (France vs England)
+### Demo path (France vs England cinema)
 
-Order matters: **place calls before settlement**. Settlement marks the match
-finished and closes markets.
+Past-match **cinema replay** — step through kick-off → goals → cards → HT → FT
+while recording. Do **not** use bulk `ingestion:replay` for demos (it dumps the
+whole match at once so nothing moves on screen).
 
 ```bash
 npm run db:migrate
-npm run ingestion:replay -- 18257865 72
-# If the match was already settled and markets are closed:
-npm run demo:reset-match -- 18257865
-npm run dev
-# Sign in (magic link goes straight into the app — no password/setup step)
-# Open /matches/18257865 → place a call while markets are open
-npm run settlement:run -- 18257865
-# Then open /receipts/<callId>, /leaderboard, /profile/<username>
+npm run demo:cinema                 # reset to prematch board
+npm run dev                         # if not already running
+# Open http://localhost:3000/matches/18257865
+# Sign in → place a call → click "Advance match" on the yellow demo bar
+# At full time → "Settle calls" → open receipt / share card / leaderboard
 ```
 
-Replay loads captured odds/scores plus optional `*.live.json` in-play fixtures.
-Settlement loads `scores.<fixtureId>.final.json` when present.
+CLI alternative to the on-page buttons:
+
+```bash
+npm run demo:cinema -- advance
+npm run demo:cinema -- settle
+```
+
+Bookmaker spread, momentum meter, 1st-half / handicap markets, and call drift
+are all exercised by this cinema script.
 
 ### Checks
 

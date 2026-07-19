@@ -15,8 +15,11 @@ export async function GET(request: NextRequest) {
       throw new AppError("validation", "Missing sign-in token");
     }
 
-    await verifyEmailSignIn(token, code);
-    return NextResponse.redirect(new URL("/", serverEnv().APP_URL));
+    const { linked } = await verifyEmailSignIn(token, code);
+    const destination = linked
+      ? "/settings?linked=email"
+      : "/";
+    return NextResponse.redirect(new URL(destination, serverEnv().APP_URL));
   } catch (error) {
     if (error instanceof AppError) {
       return NextResponse.redirect(

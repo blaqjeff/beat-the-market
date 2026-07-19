@@ -52,6 +52,7 @@ export function quoteOutcome(rawPct: string | number, credits: number) {
 export const CALL_MARKET_TYPES = new Set([
   "1X2_PARTICIPANT_RESULT",
   "OVERUNDER_PARTICIPANT_GOALS",
+  "ASIANHANDICAP_PARTICIPANT_GOALS",
 ]);
 
 /** @deprecated Use CALL_MARKET_TYPES */
@@ -71,9 +72,15 @@ export function isSupportedCallMarket(input: {
 }): boolean {
   void input.inRunning;
   if (!CALL_MARKET_TYPES.has(input.superOddsType)) return false;
-  // Prefer full-match markets; skip period-scoped rows for the first release.
-  if (input.marketPeriod) return false;
-  return true;
+  // Full-match or first-half (`half=1`) only.
+  if (!input.marketPeriod) return true;
+  const period = input.marketPeriod.trim().toLowerCase();
+  return (
+    period === "half=1" ||
+    period === "1" ||
+    period === "first_half" ||
+    period === "1h"
+  );
 }
 
 export function isSupportedPrematchMarket(input: {

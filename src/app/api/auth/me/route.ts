@@ -1,4 +1,5 @@
 import { getCurrentUser } from "@/lib/auth/session";
+import { getUserIdentities } from "@/lib/auth/user-profile";
 import { jsonError, jsonOk } from "@/lib/errors/http";
 
 export const runtime = "nodejs";
@@ -11,12 +12,18 @@ export async function GET() {
       return jsonOk({ user: null });
     }
 
+    const identities = await getUserIdentities(user.id);
+
     return jsonOk({
       user: {
         id: user.id,
         username: user.username,
         displayName: user.displayName,
         email: user.email,
+        identities: {
+          email: identities.email,
+          wallet: identities.wallet,
+        },
       },
     });
   } catch (error) {

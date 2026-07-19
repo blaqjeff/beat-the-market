@@ -4,6 +4,7 @@ import {
   callResultFromResolution,
   parseLineParameter,
   resolve1x2,
+  resolveAsianHandicap,
   resolveMarket,
   resolveOverUnder,
 } from "@/lib/game/resolve-markets";
@@ -66,5 +67,58 @@ describe("resolve markets", () => {
       marketParameters: "line=2",
     });
     expect(callResultFromResolution("over", voided)).toBe("void");
+  });
+
+  it("resolves asian handicap with pushes", () => {
+    expect(
+      resolveAsianHandicap({
+        homeScore: 1,
+        awayScore: 1,
+        participant1IsHome: true,
+        marketParameters: "line=0",
+      })
+    ).toEqual({ status: "void", reason: "Handicap push on line 0" });
+    expect(
+      resolveAsianHandicap({
+        homeScore: 2,
+        awayScore: 1,
+        participant1IsHome: true,
+        marketParameters: "line=-0.5",
+      })
+    ).toEqual({ status: "decided", winningOutcomeKey: "part1" });
+    expect(
+      resolveAsianHandicap({
+        homeScore: 1,
+        awayScore: 1,
+        participant1IsHome: true,
+        marketParameters: "line=-0.25",
+      }).status
+    ).toBe("void");
+  });
+
+  it("settles first-half markets on HT score not FT", () => {
+    const ht = resolveMarket({
+      superOddsType: "OVERUNDER_PARTICIPANT_GOALS",
+      marketParameters: "line=1.5",
+      marketPeriod: "half=1",
+      homeScore: 3,
+      awayScore: 2,
+      participant1IsHome: true,
+      firstHalfHomeScore: 1,
+      firstHalfAwayScore: 0,
+    });
+    expect(ht).toEqual({ status: "decided", winningOutcomeKey: "under" });
+
+    const missing = resolveMarket({
+      superOddsType: "1X2_PARTICIPANT_RESULT",
+      marketParameters: null,
+      marketPeriod: "half=1",
+      homeScore: 2,
+      awayScore: 1,
+      participant1IsHome: true,
+      firstHalfHomeScore: null,
+      firstHalfAwayScore: null,
+    });
+    expect(missing.status).toBe("void");
   });
 });

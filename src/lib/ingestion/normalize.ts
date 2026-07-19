@@ -145,6 +145,9 @@ export function normalizeOddsRow(
         .filter((value) => Number.isFinite(value))
     : [];
 
+  const bookmaker = stringOrNull(row.Bookmaker ?? row.bookmaker);
+  const bookmakerId = numberOrNull(row.BookmakerId ?? row.bookmakerId);
+
   const messageId =
     stringOrNull(row.MessageId ?? row.messageId) ??
     createHash("sha256")
@@ -154,6 +157,9 @@ export function normalizeOddsRow(
           superOddsType,
           marketParameters,
           marketPeriod,
+          inRunning,
+          bookmaker,
+          bookmakerId,
           sourceTimestamp: sourceTimestamp.toString(),
           prices,
         })
@@ -174,8 +180,8 @@ export function normalizeOddsRow(
     marketParameters,
     marketPeriod,
     inRunning,
-    bookmaker: stringOrNull(row.Bookmaker ?? row.bookmaker),
-    bookmakerId: numberOrNull(row.BookmakerId ?? row.bookmakerId),
+    bookmaker,
+    bookmakerId,
     priceNames,
     prices,
     pct: Array.isArray(row.Pct ?? row.pct)

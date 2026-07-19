@@ -4,26 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import bs58 from "bs58";
 
-interface SolanaProvider {
-  publicKey?: { toBase58(): string };
-  connect(): Promise<{ publicKey: { toBase58(): string } }>;
-  signMessage(
-    message: Uint8Array,
-    display?: string
-  ): Promise<{ signature: Uint8Array } | Uint8Array>;
-}
-
-function walletProvider(): SolanaProvider {
-  const browser = window as unknown as {
-    solana?: SolanaProvider;
-    phantom?: { solana?: SolanaProvider };
-  };
-  const wallet = browser.phantom?.solana ?? browser.solana;
-  if (!wallet) {
-    throw new Error("Install Phantom or another Solana wallet to continue");
-  }
-  return wallet;
-}
+import { walletProvider } from "@/lib/auth/wallet-client";
 
 export function LoginPanel({
   initialError,
@@ -47,7 +28,7 @@ export function LoginPanel({
       const response = await fetch("/api/auth/email/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, link: true }),
+        body: JSON.stringify({ email, link: false }),
       });
       const payload = (await response.json()) as {
         delivered?: boolean;
@@ -60,7 +41,6 @@ export function LoginPanel({
       if (payload.delivered) {
         setMessage("Check your inbox for a sign-in link.");
       } else if (payload.devVerifyUrl) {
-        // Only returned when SENDBYTE_API_KEY is unset in development.
         setDevLink(payload.devVerifyUrl);
         setMessage(
           "No email provider configured. Set SENDBYTE_API_KEY, or use the local link below."
@@ -112,20 +92,16 @@ export function LoginPanel({
           publicKey,
           nonce: challenge.nonce,
           signature: bs58.encode(signatureBytes),
-          link: true,
+          link: false,
         }),
       });
       const verified = (await verifyResponse.json()) as {
         error?: { message?: string };
-        linked?: boolean;
       };
       if (!verifyResponse.ok) {
         throw new Error(verified.error?.message ?? "Wallet verification failed");
       }
 
-      if (verified.linked) {
-        setMessage("Wallet linked to your account.");
-      }
       router.replace("/");
       router.refresh();
     } catch (caught) {

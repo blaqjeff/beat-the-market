@@ -72,8 +72,32 @@ dependent; local path verification does not require a live chain.
 
 Call placement supports:
 
-- `1X2_PARTICIPANT_RESULT`
-- full-match `OVERUNDER_PARTICIPANT_GOALS`
+- `1X2_PARTICIPANT_RESULT` (full match + `MarketPeriod=half=1`)
+- `OVERUNDER_PARTICIPANT_GOALS` (full match + `half=1`)
+- `ASIANHANDICAP_PARTICIPANT_GOALS` (full match + `half=1`)
 
-Period-scoped and goalscorer markets are ignored or marked unavailable when
-TxLINE does not publish them.
+First-half markets settle on the half-time score snapshot (or last ≤45′
+score / period keys `1001`/`1002` when published). Goalscorer markets stay
+unavailable until TxLINE publishes them.
+
+## Live board extras
+
+Score `Stats` keys 1–8 feed goals, yellow/red cards, and corners into:
+
+- match timeline moments
+- the momentum / tempo meter (plus 1X2 consensus drift)
+- home World Cup board scorelines
+
+Multiple `Bookmaker` rows on the same market key power the bookmaker spread UI.
+Call pricing always uses the TxLINE consensus book (`BookmakerId` 10021).
+
+## Past-match cinema (demo recording)
+
+```bash
+npm run demo:cinema                 # reset France vs England to prematch
+# open /matches/18257865 — use Advance match / Settle on the demo bar
+npm run demo:cinema -- advance
+npm run demo:cinema -- settle
+```
+
+Script: `tests/fixtures/txline/demo.18257865.beats.json`

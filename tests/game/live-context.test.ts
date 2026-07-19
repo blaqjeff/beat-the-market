@@ -159,10 +159,91 @@ describe("live-context", () => {
     expect(inferMatchPhase("suspended")).toBe("suspended");
     expect(inferMatchPhase("game_finalised")).toBe("finished");
   });
+
+  it("surfaces cards, corners, HT score, and momentum", () => {
+    const board = buildLiveBoard({
+      gameState: "first_half",
+      participant1IsHome: true,
+      homeName: "France",
+      awayName: "England",
+      oddsBiasHomeBps: 200,
+      events: [
+        {
+          sequence: 1,
+          action: "kick_off",
+          gameState: "first_half",
+          sourceTimestamp: 1,
+          stats: { "1": 0, "2": 0, "3": 0, "4": 0, "7": 0, "8": 0 },
+          data: {},
+          rawPayload: { Minutes: 1 },
+        },
+        {
+          sequence: 2,
+          action: "stats_update",
+          gameState: "first_half",
+          sourceTimestamp: 2,
+          stats: { "1": 0, "2": 0, "3": 0, "4": 0, "7": 2, "8": 0 },
+          data: {},
+          rawPayload: { Minutes: 12 },
+        },
+        {
+          sequence: 3,
+          action: "goal",
+          gameState: "first_half",
+          sourceTimestamp: 3,
+          stats: { "1": 1, "2": 0, "3": 0, "4": 0, "7": 2, "8": 1 },
+          data: {},
+          rawPayload: { Minutes: 18 },
+        },
+        {
+          sequence: 4,
+          action: "yellow_card",
+          gameState: "first_half",
+          sourceTimestamp: 4,
+          stats: { "1": 1, "2": 0, "3": 0, "4": 1, "7": 2, "8": 1 },
+          data: {},
+          rawPayload: { Minutes: 27 },
+        },
+        {
+          sequence: 5,
+          action: "half_time",
+          gameState: "half_time",
+          sourceTimestamp: 5,
+          stats: { "1": 1, "2": 0, "3": 0, "4": 1, "7": 3, "8": 1 },
+          data: {},
+          rawPayload: { Minutes: 45 },
+        },
+      ],
+    });
+
+    expect(board.sideStats.home.corners).toBe(3);
+    expect(board.sideStats.away.yellowCards).toBe(1);
+    expect(board.firstHalfScore).toEqual({
+      participant1: 1,
+      participant2: 0,
+      home: 1,
+      away: 0,
+    });
+    expect(
+      board.timeline.some((row) => row.kind === "corner" && row.visible)
+    ).toBe(true);
+    expect(
+      board.timeline.some((row) =>
+        row.headline.toLowerCase().includes("yellow")
+      )
+    ).toBe(true);
+    expect(board.momentum.homePressure).toBeGreaterThan(50);
+    expect(board.momentum.tempoScore).toBeGreaterThan(0);
+    expect(board.momentum.label.toLowerCase()).toContain("france");
+    expect(board.momentum.series.length).toBeGreaterThan(1);
+    expect(
+      board.momentum.series[board.momentum.series.length - 1]!.balance
+    ).toBe(board.momentum.balance);
+  });
 });
 
 describe("call markets", () => {
-  it("allows in-play winner and totals while keeping period markets out", () => {
+  it("allows in-play winner, totals, handicap, and first-half markets", () => {
     expect(
       isSupportedCallMarket({
         superOddsType: "1X2_PARTICIPANT_RESULT",
@@ -182,6 +263,20 @@ describe("call markets", () => {
         superOddsType: "OVERUNDER_PARTICIPANT_GOALS",
         inRunning: true,
         marketPeriod: "half=1",
+      })
+    ).toBe(true);
+    expect(
+      isSupportedCallMarket({
+        superOddsType: "ASIANHANDICAP_PARTICIPANT_GOALS",
+        inRunning: false,
+        marketPeriod: null,
+      })
+    ).toBe(true);
+    expect(
+      isSupportedCallMarket({
+        superOddsType: "OVERUNDER_PARTICIPANT_GOALS",
+        inRunning: true,
+        marketPeriod: "half=2",
       })
     ).toBe(false);
   });

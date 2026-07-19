@@ -2,21 +2,13 @@ import Link from "next/link";
 
 import { FeedStatusBanner } from "@/components/shell/FeedStatusBanner";
 import { getCurrentUser } from "@/lib/auth/session";
-import { prisma } from "@/lib/db/prisma";
-import { fixturePhasePill } from "@/lib/game/labels";
+import { getHomeFixtureBoard } from "@/lib/game/home-board";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   let user: Awaited<ReturnType<typeof getCurrentUser>> = null;
-  let fixtures: Array<{
-    sourceFixtureId: string;
-    home: string;
-    away: string;
-    startsAt: Date;
-    competitionName: string | null;
-    gameState: string | null;
-  }> = [];
+  let fixtures: Awaited<ReturnType<typeof getHomeFixtureBoard>> = [];
 
   try {
     user = await getCurrentUser();
@@ -25,27 +17,13 @@ export default async function Home() {
   }
 
   try {
-    const rows = await prisma().fixture.findMany({
-      orderBy: { startsAt: "asc" },
-      include: {
-        homeParticipant: true,
-        awayParticipant: true,
-      },
-      take: 20,
-    });
-    fixtures = rows.map((row) => ({
-      sourceFixtureId: row.sourceFixtureId,
-      home: row.homeParticipant.name,
-      away: row.awayParticipant.name,
-      startsAt: row.startsAt,
-      competitionName: row.competitionName,
-      gameState: row.gameState,
-    }));
+    fixtures = await getHomeFixtureBoard(24);
   } catch {
     fixtures = [];
   }
 
-  const featured = fixtures[0] ?? null;
+  const featured =
+    fixtures.find((row) => row.phasePill === "Live") ?? fixtures[0] ?? null;
   const primaryHref = user
     ? featured
       ? `/matches/${featured.sourceFixtureId}`
@@ -53,9 +31,13 @@ export default async function Home() {
     : "/login";
   const primaryLabel = user
     ? featured
-      ? "Open match centre"
+      ? featured.phasePill === "Live"
+        ? "Jump into live match"
+        : "Open match centre"
       : "View leaderboard"
     : "Start making calls";
+
+  const liveCount = fixtures.filter((row) => row.phasePill === "Live").length;
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
@@ -95,12 +77,17 @@ export default async function Home() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">
-              Matches
+              World Cup board
             </p>
             <h2 className="mt-2 font-[family-name:var(--font-display)] text-2xl tracking-wide text-[color:var(--chalk)]">
-              Open boards
+              Live scores & kickoffs
             </h2>
           </div>
+          {liveCount > 0 ? (
+            <p className="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--signal)]">
+              {liveCount} live
+            </p>
+          ) : null}
         </div>
 
         {fixtures.length === 0 ? (
@@ -110,38 +97,59 @@ export default async function Home() {
         ) : (
           <ul className="mt-4 grid gap-3">
             {fixtures.map((fixture) => {
-              const phase = fixturePhasePill(fixture.gameState);
               const kickoff = fixture.startsAt.toLocaleString(undefined, {
                 month: "short",
                 day: "numeric",
                 hour: "numeric",
                 minute: "2-digit",
               });
+              const live = fixture.phasePill === "Live";
               return (
                 <li key={fixture.sourceFixtureId}>
                   <Link
                     href={`/matches/${fixture.sourceFixtureId}`}
                     className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/40 px-5 py-4 transition hover:border-[color:var(--signal)]"
                   >
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-[family-name:var(--font-display)] text-lg tracking-wide text-[color:var(--chalk)]">
-                          {fixture.home} vs {fixture.away}
+                          {fixture.home}
+                          {fixture.score ? (
+                            <span className="mx-2 font-mono tabular-nums text-[color:var(--signal)]">
+                              {fixture.score.home}–{fixture.score.away}
+                            </span>
+                          ) : (
+                            <span className="mx-2 text-[color:var(--muted)]">
+                              vs
+                            </span>
+                          )}
+                          {fixture.away}
                         </p>
                         <span
                           className={`rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.14em] ${
-                            phase === "Live"
+                            live
                               ? "border-[color:var(--signal)]/40 text-[color:var(--signal)]"
                               : "border-[color:var(--line)] text-[color:var(--muted)]"
                           }`}
                         >
-                          {phase}
+                          {fixture.phasePill}
+                          {live && fixture.clockDisplay
+                            ? ` · ${fixture.clockDisplay}`
+                            : ""}
                         </span>
                       </div>
                       <p className="mt-1 text-sm text-[color:var(--muted)]">
                         {fixture.competitionName ?? "World Cup"}
                         <span className="mx-2 text-[color:var(--line)]">·</span>
-                        Kickoff {kickoff}
+                        {live ? "In play" : `Kickoff ${kickoff}`}
+                        {fixture.momentumLabel ? (
+                          <>
+                            <span className="mx-2 text-[color:var(--line)]">
+                              ·
+                            </span>
+                            {fixture.momentumLabel}
+                          </>
+                        ) : null}
                       </p>
                     </div>
                     <span className="font-mono text-xs uppercase tracking-[0.18em] text-[color:var(--signal)]">

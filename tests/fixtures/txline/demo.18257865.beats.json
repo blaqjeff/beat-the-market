@@ -1,0 +1,446 @@
+{
+  "fixtureId": "18257865",
+  "competitionId": "72",
+  "title": "France vs England — cinema replay",
+  "beats": [
+    {
+      "id": "prematch",
+      "label": "Prematch board (place a call here)",
+      "hint": "Open Handicap / 1st-half totals / Match result. Check bookmaker spread under Match result.",
+      "odds": [
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-pre-1x2-10021",
+          "Ts": 1784394029731,
+          "Bookmaker": "TXLineStablePriceDemargined",
+          "BookmakerId": 10021,
+          "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+          "InRunning": false,
+          "MarketParameters": null,
+          "MarketPeriod": null,
+          "PriceNames": ["part1", "draw", "part2"],
+          "Prices": [1911, 4283, 4110],
+          "Pct": ["52.329", "23.348", "24.331"]
+        },
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-pre-1x2-bet365",
+          "Ts": 1784394029731,
+          "Bookmaker": "Bet365",
+          "BookmakerId": 1,
+          "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+          "InRunning": false,
+          "MarketParameters": null,
+          "MarketPeriod": null,
+          "PriceNames": ["part1", "draw", "part2"],
+          "Prices": [1850, 4000, 4300],
+          "Pct": ["54.100", "22.000", "23.900"]
+        },
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-pre-1x2-pinnacle",
+          "Ts": 1784394029731,
+          "Bookmaker": "Pinnacle",
+          "BookmakerId": 2,
+          "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+          "InRunning": false,
+          "MarketParameters": null,
+          "MarketPeriod": null,
+          "PriceNames": ["part1", "draw", "part2"],
+          "Prices": [1980, 4350, 4000],
+          "Pct": ["50.500", "24.200", "25.300"]
+        },
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-pre-1x2-unibet",
+          "Ts": 1784394029731,
+          "Bookmaker": "Unibet",
+          "BookmakerId": 3,
+          "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+          "InRunning": false,
+          "MarketParameters": null,
+          "MarketPeriod": null,
+          "PriceNames": ["part1", "draw", "part2"],
+          "Prices": [1900, 4200, 4150],
+          "Pct": ["52.800", "23.100", "24.100"]
+        },
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-pre-ah-0",
+          "Ts": 1784394029731,
+          "Bookmaker": "TXLineStablePriceDemargined",
+          "BookmakerId": 10021,
+          "SuperOddsType": "ASIANHANDICAP_PARTICIPANT_GOALS",
+          "InRunning": false,
+          "MarketParameters": "line=-0.25",
+          "MarketPeriod": null,
+          "PriceNames": ["part1", "part2"],
+          "Prices": [1900, 2100],
+          "Pct": ["52.500", "47.500"]
+        },
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-pre-ou-ht",
+          "Ts": 1784394029731,
+          "Bookmaker": "TXLineStablePriceDemargined",
+          "BookmakerId": 10021,
+          "SuperOddsType": "OVERUNDER_PARTICIPANT_GOALS",
+          "InRunning": false,
+          "MarketParameters": "line=1.5",
+          "MarketPeriod": "half=1",
+          "PriceNames": ["over", "under"],
+          "Prices": [2200, 1800],
+          "Pct": ["45.000", "55.000"]
+        },
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-pre-ou-ft",
+          "Ts": 1784394029731,
+          "Bookmaker": "TXLineStablePriceDemargined",
+          "BookmakerId": 10021,
+          "SuperOddsType": "OVERUNDER_PARTICIPANT_GOALS",
+          "InRunning": false,
+          "MarketParameters": "line=2.5",
+          "MarketPeriod": null,
+          "PriceNames": ["over", "under"],
+          "Prices": [2000, 2000],
+          "Pct": ["50.000", "50.000"]
+        }
+      ],
+      "scores": []
+    },
+    {
+      "id": "kickoff",
+      "label": "Kick-off",
+      "hint": "Momentum meter arms. Timeline shows KO.",
+      "scores": [
+        {
+          "FixtureId": 18257865,
+          "Seq": 10,
+          "Ts": 1784408500000,
+          "GameState": "first_half",
+          "Action": "kick_off",
+          "Stats": { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0, "8": 0 },
+          "Minutes": 1,
+          "Clock": { "running": true, "seconds": 60 },
+          "Participant1IsHome": true
+        }
+      ],
+      "odds": [
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-live-1x2-ko-10021",
+          "Ts": 1784408600000,
+          "Bookmaker": "TXLineStablePriceDemargined",
+          "BookmakerId": 10021,
+          "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+          "GameState": "first_half",
+          "InRunning": true,
+          "PriceNames": ["part1", "draw", "part2"],
+          "Prices": [1850, 4000, 4200],
+          "Pct": ["51.000", "24.000", "25.000"]
+        },
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-live-1x2-ko-bet365",
+          "Ts": 1784408600000,
+          "Bookmaker": "Bet365",
+          "BookmakerId": 1,
+          "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+          "GameState": "first_half",
+          "InRunning": true,
+          "PriceNames": ["part1", "draw", "part2"],
+          "Prices": [1800, 3900, 4300],
+          "Pct": ["52.500", "23.500", "24.000"]
+        },
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-live-1x2-ko-pinnacle",
+          "Ts": 1784408600000,
+          "Bookmaker": "Pinnacle",
+          "BookmakerId": 2,
+          "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+          "GameState": "first_half",
+          "InRunning": true,
+          "PriceNames": ["part1", "draw", "part2"],
+          "Prices": [1920, 4100, 4000],
+          "Pct": ["49.800", "24.500", "25.700"]
+        }
+      ]
+    },
+    {
+      "id": "corners-pressure",
+      "label": "France corner spell",
+      "hint": "Corners feed the momentum meter toward France.",
+      "scores": [
+        {
+          "FixtureId": 18257865,
+          "Seq": 11,
+          "Ts": 1784408700000,
+          "GameState": "first_half",
+          "Action": "stats_update",
+          "Stats": { "1": 0, "2": 0, "3": 0, "4": 0, "7": 2, "8": 0 },
+          "Minutes": 8,
+          "Clock": { "running": true, "seconds": 480 },
+          "Participant1IsHome": true
+        }
+      ],
+      "odds": []
+    },
+    {
+      "id": "france-goal",
+      "label": "France score (1–0)",
+      "hint": "Watch momentum swing + consensus drift on your open call.",
+      "scores": [
+        {
+          "FixtureId": 18257865,
+          "Seq": 12,
+          "Ts": 1784408900000,
+          "GameState": "first_half",
+          "Action": "goal",
+          "Stats": { "1": 1, "2": 0, "3": 0, "4": 0, "7": 3, "8": 0 },
+          "Minutes": 18,
+          "Clock": { "running": true, "seconds": 1080 },
+          "Participant1IsHome": true
+        }
+      ],
+      "odds": [
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-live-1x2-g1-10021",
+          "Ts": 1784409000000,
+          "Bookmaker": "TXLineStablePriceDemargined",
+          "BookmakerId": 10021,
+          "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+          "GameState": "first_half",
+          "InRunning": true,
+          "PriceNames": ["part1", "draw", "part2"],
+          "Prices": [1400, 3600, 5000],
+          "Pct": ["55.400", "22.800", "21.800"]
+        },
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-live-1x2-g1-bet365",
+          "Ts": 1784409000000,
+          "Bookmaker": "Bet365",
+          "BookmakerId": 1,
+          "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+          "GameState": "first_half",
+          "InRunning": true,
+          "PriceNames": ["part1", "draw", "part2"],
+          "Prices": [1300, 3500, 5200],
+          "Pct": ["58.000", "21.000", "21.000"]
+        },
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-live-1x2-g1-pinnacle",
+          "Ts": 1784409000000,
+          "Bookmaker": "Pinnacle",
+          "BookmakerId": 2,
+          "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+          "GameState": "first_half",
+          "InRunning": true,
+          "PriceNames": ["part1", "draw", "part2"],
+          "Prices": [1500, 3700, 4800],
+          "Pct": ["53.500", "23.500", "23.000"]
+        },
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-live-ou-g1",
+          "Ts": 1784409001000,
+          "Bookmaker": "TXLineStablePriceDemargined",
+          "BookmakerId": 10021,
+          "SuperOddsType": "OVERUNDER_PARTICIPANT_GOALS",
+          "GameState": "first_half",
+          "InRunning": true,
+          "MarketParameters": "line=2.5",
+          "PriceNames": ["over", "under"],
+          "Prices": [2100, 2800],
+          "Pct": ["57.250", "42.750"]
+        }
+      ]
+    },
+    {
+      "id": "england-yellow",
+      "label": "England yellow card",
+      "hint": "Card shows on timeline + cards counter.",
+      "scores": [
+        {
+          "FixtureId": 18257865,
+          "Seq": 13,
+          "Ts": 1784409200000,
+          "GameState": "first_half",
+          "Action": "yellow_card",
+          "Stats": { "1": 1, "2": 0, "3": 0, "4": 1, "7": 3, "8": 1 },
+          "Minutes": 27,
+          "Clock": { "running": true, "seconds": 1620 },
+          "Participant1IsHome": true
+        }
+      ],
+      "odds": []
+    },
+    {
+      "id": "england-goal",
+      "label": "England equaliser (1–1)",
+      "hint": "Momentum flips; open-call drift may move against a France call.",
+      "scores": [
+        {
+          "FixtureId": 18257865,
+          "Seq": 14,
+          "Ts": 1784409800000,
+          "GameState": "first_half",
+          "Action": "goal",
+          "Stats": { "1": 1, "2": 1, "3": 0, "4": 1, "7": 3, "8": 2 },
+          "Minutes": 34,
+          "Clock": { "running": true, "seconds": 2040 },
+          "Participant1IsHome": true
+        }
+      ],
+      "odds": [
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-live-1x2-g2-10021",
+          "Ts": 1784409900000,
+          "Bookmaker": "TXLineStablePriceDemargined",
+          "BookmakerId": 10021,
+          "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+          "GameState": "first_half",
+          "InRunning": true,
+          "PriceNames": ["part1", "draw", "part2"],
+          "Prices": [2200, 3000, 2800],
+          "Pct": ["36.500", "30.000", "33.500"]
+        },
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-live-1x2-g2-bet365",
+          "Ts": 1784409900000,
+          "Bookmaker": "Bet365",
+          "BookmakerId": 1,
+          "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+          "GameState": "first_half",
+          "InRunning": true,
+          "PriceNames": ["part1", "draw", "part2"],
+          "Prices": [2300, 2900, 2700],
+          "Pct": ["35.000", "31.000", "34.000"]
+        }
+      ]
+    },
+    {
+      "id": "half-time",
+      "label": "Half-time",
+      "hint": "1st-half markets can settle on this HT score later.",
+      "scores": [
+        {
+          "FixtureId": 18257865,
+          "Seq": 15,
+          "Ts": 1784410500000,
+          "GameState": "half_time",
+          "Action": "half_time",
+          "Stats": { "1": 1, "2": 1, "3": 0, "4": 1, "7": 4, "8": 2, "1001": 1, "1002": 1 },
+          "Minutes": 45,
+          "Clock": { "running": false, "seconds": 2700 },
+          "Participant1IsHome": true
+        }
+      ],
+      "odds": []
+    },
+    {
+      "id": "second-half",
+      "label": "Second half",
+      "hint": "Keep advancing toward the winner.",
+      "scores": [
+        {
+          "FixtureId": 18257865,
+          "Seq": 16,
+          "Ts": 1784410800000,
+          "GameState": "second_half",
+          "Action": "second_half",
+          "Stats": { "1": 1, "2": 1, "3": 0, "4": 1, "7": 4, "8": 2 },
+          "Minutes": 46,
+          "Clock": { "running": true, "seconds": 2760 },
+          "Participant1IsHome": true
+        }
+      ],
+      "odds": [
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-live-1x2-2h-10021",
+          "Ts": 1784410810000,
+          "Bookmaker": "TXLineStablePriceDemargined",
+          "BookmakerId": 10021,
+          "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+          "GameState": "second_half",
+          "InRunning": true,
+          "PriceNames": ["part1", "draw", "part2"],
+          "Prices": [2400, 2800, 2800],
+          "Pct": ["35.000", "32.500", "32.500"]
+        }
+      ]
+    },
+    {
+      "id": "france-winner",
+      "label": "France winner (2–1)",
+      "hint": "Momentum spikes for France again.",
+      "scores": [
+        {
+          "FixtureId": 18257865,
+          "Seq": 17,
+          "Ts": 1784411500000,
+          "GameState": "second_half",
+          "Action": "goal",
+          "Stats": { "1": 2, "2": 1, "3": 1, "4": 1, "7": 5, "8": 3 },
+          "Minutes": 72,
+          "Clock": { "running": true, "seconds": 4320 },
+          "Participant1IsHome": true
+        }
+      ],
+      "odds": [
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-live-1x2-g3-10021",
+          "Ts": 1784411600000,
+          "Bookmaker": "TXLineStablePriceDemargined",
+          "BookmakerId": 10021,
+          "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+          "GameState": "second_half",
+          "InRunning": true,
+          "PriceNames": ["part1", "draw", "part2"],
+          "Prices": [1100, 4500, 6000],
+          "Pct": ["72.000", "16.000", "12.000"]
+        },
+        {
+          "FixtureId": 18257865,
+          "MessageId": "demo-live-1x2-g3-bet365",
+          "Ts": 1784411600000,
+          "Bookmaker": "Bet365",
+          "BookmakerId": 1,
+          "SuperOddsType": "1X2_PARTICIPANT_RESULT",
+          "GameState": "second_half",
+          "InRunning": true,
+          "PriceNames": ["part1", "draw", "part2"],
+          "Prices": [1050, 4600, 6200],
+          "Pct": ["74.500", "15.000", "10.500"]
+        }
+      ]
+    },
+    {
+      "id": "full-time",
+      "label": "Full time — settle calls",
+      "hint": "Click Settle in the demo bar (or run settlement:run).",
+      "scores": [
+        {
+          "FixtureId": 18257865,
+          "Seq": 20,
+          "Ts": 1784412000000,
+          "GameState": "finished",
+          "Action": "game_finalised",
+          "Stats": { "1": 2, "2": 1, "3": 1, "4": 1, "7": 5, "8": 3, "1001": 1, "1002": 1 },
+          "Minutes": 90,
+          "Clock": { "running": false, "seconds": 5400 },
+          "Participant1IsHome": true
+        }
+      ],
+      "odds": []
+    }
+  ]
+}

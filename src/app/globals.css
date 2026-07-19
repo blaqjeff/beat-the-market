@@ -67,3 +67,65 @@ a {
 .signal-line {
   animation: pulse-line 2.8s ease-in-out infinite;
 }
+
+@keyframes goal-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  18% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  75% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes momentum-dot {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes score-pulse {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-goal-burst {
+  animation: goal-burst 2.2s ease-out both;
+}
+
+.animate-momentum-dot {
+  animation: momentum-dot 1.4s ease-in-out infinite;
+}
+
+.animate-score-pulse {
+  animation: score-pulse 0.85s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-goal-burst,
+  .animate-momentum-dot,
+  .animate-score-pulse,
+  .signal-line {
+    animation: none;
+  }
+}

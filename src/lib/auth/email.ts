@@ -112,6 +112,8 @@ export async function verifyEmailSignIn(signedToken: string, code: string) {
     throw new AppError("unauthorized", "Sign-in link is invalid or expired");
   }
 
+  const linkingToExistingAccount = Boolean(magicLink.userId);
+
   const user = await prisma().$transaction(async (tx) => {
     await tx.emailMagicLink.update({
       where: { id: magicLink.id },
@@ -194,6 +196,6 @@ export async function verifyEmailSignIn(signedToken: string, code: string) {
   });
 
   await createSession(user.id);
-  logInfo("auth.email.verified", { userId: user.id });
-  return user;
+  logInfo("auth.email.verified", { userId: user.id, linked: linkingToExistingAccount });
+  return { user, linked: linkingToExistingAccount };
 }

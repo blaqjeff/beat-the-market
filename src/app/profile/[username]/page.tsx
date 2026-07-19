@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { getCurrentUser } from "@/lib/auth/session";
 import { getProfileByUsername } from "@/lib/game/leaderboard";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +11,11 @@ export default async function ProfilePage({
   params: Promise<{ username: string }>;
 }) {
   const { username } = await params;
-  const profile = await getProfileByUsername(username);
+  const [profile, currentUser] = await Promise.all([
+    getProfileByUsername(username),
+    getCurrentUser(),
+  ]);
+  const isOwnProfile = profile && currentUser?.id === profile.user.id;
 
   if (!profile) {
     return (
@@ -54,6 +59,14 @@ export default async function ProfilePage({
             ) : null}
           </p>
         </div>
+        {isOwnProfile ? (
+          <Link
+            href="/settings"
+            className="rounded-full border border-[color:var(--line)] px-4 py-2 text-sm font-semibold text-[color:var(--chalk)] transition hover:border-[color:var(--signal)]"
+          >
+            Account settings
+          </Link>
+        ) : null}
       </div>
 
       <section className="mt-8 flex flex-wrap justify-center gap-2 sm:justify-start">

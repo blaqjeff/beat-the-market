@@ -8,6 +8,7 @@ export function buildSettlementNarrative(input: {
   finalAwayScore: number;
   marketType: string;
   marketParameters: string | null;
+  marketPeriod?: string | null;
   outcomeKey: string;
   result: "won" | "lost" | "void";
   pointsAwarded: number;
@@ -17,7 +18,11 @@ export function buildSettlementNarrative(input: {
   resolution: MarketResolution;
 }): string {
   const callSide = outcomeLabel(input.outcomeKey, input.home, input.away);
-  const market = marketLabel(input.marketType, input.marketParameters);
+  const market = marketLabel(
+    input.marketType,
+    input.marketParameters,
+    input.marketPeriod ?? null
+  );
   const scoreline = `${input.finalHomeScore}–${input.finalAwayScore}`;
   const winner =
     input.resolution.status === "decided"

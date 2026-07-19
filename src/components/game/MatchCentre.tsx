@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+import { BookmakerSpread } from "@/components/game/BookmakerSpread";
+import { DemoCinemaBar } from "@/components/game/DemoCinemaBar";
 import { MatchCallsSheet } from "@/components/game/MatchCallsSheet";
+import { MatchEventFx } from "@/components/game/MatchEventFx";
+import { MomentumMeter } from "@/components/game/MomentumMeter";
 import {
   availabilityLabel,
   formatMultiplier,
@@ -21,14 +25,25 @@ interface Outcome {
   multiplierMilli: number | null;
   potentialPointsPer100: number | null;
   deltaBps: number | null;
+  bookmakerSpreadBps?: number | null;
+  bookmakerMinPct?: string | null;
+  bookmakerMaxPct?: string | null;
 }
 
 interface Market {
   id: string;
   superOddsType: string;
   marketParameters: string | null;
+  marketPeriod?: string | null;
   availability: string;
   inRunning: boolean;
+  quoteBookmaker?: string | null;
+  bookmakers?: Array<{
+    bookmaker: string;
+    bookmakerId: number | null;
+    isConsensus: boolean;
+    outcomes: Array<{ key: string; pct: string | null }>;
+  }>;
   outcomes: Outcome[];
 }
 
@@ -49,6 +64,24 @@ interface MatchState {
     phase: string;
     callsBlocked: boolean;
     blockReason: string | null;
+    sideStats?: {
+      home: { yellowCards: number; redCards: number; corners: number };
+      away: { yellowCards: number; redCards: number; corners: number };
+    };
+    momentum?: {
+      balance: number;
+      homePressure: number;
+      awayPressure: number;
+      tempo: "cold" | "steady" | "hot" | "frantic";
+      tempoScore: number;
+      label: string;
+      drivers: string[];
+      series?: Array<{
+        minute: number | null;
+        balance: number;
+        tempoScore: number;
+      }>;
+    };
     timeline: Array<{
       sequence: number;
       summary: string;
@@ -66,6 +99,19 @@ interface MatchState {
     scores: { status: string; mode: string | null; reconnectCount: number };
   };
   goalscorer: { status: string; reason: string | null };
+  demo?: {
+    enabled: boolean;
+    fixtureId: string;
+    title: string;
+    beatIndex: number;
+    beatTotal: number;
+    currentLabel: string | null;
+    currentHint: string | null;
+    nextLabel: string | null;
+    nextHint: string | null;
+    done: boolean;
+    matchUrl: string;
+  } | null;
   credits: {
     startingCredits: number;
     remainingCredits: number;
@@ -92,11 +138,18 @@ interface MatchState {
     hasReceipt: boolean;
     finalHomeScore: number | null;
     finalAwayScore: number | null;
+    liveProbabilityBps?: number | null;
+    consensusDeltaBps?: number | null;
+    consensusLean?: "with_you" | "against_you" | "flat" | null;
   }>;
 }
 
 function marketTitle(market: Market) {
-  const base = marketLabel(market.superOddsType, market.marketParameters);
+  const base = marketLabel(
+    market.superOddsType,
+    market.marketParameters,
+    market.marketPeriod ?? null
+  );
   return market.inRunning ? `Live · ${base}` : base;
 }
 
@@ -149,6 +202,10 @@ function timelineTone(kind: string | undefined) {
       return "bg-[color:var(--chalk)] text-[color:var(--ink)]";
     case "suspend":
       return "bg-amber-400/90 text-[color:var(--ink)]";
+    case "card":
+      return "bg-amber-300/90 text-[color:var(--ink)]";
+    case "corner":
+      return "bg-sky-300/90 text-[color:var(--ink)]";
     case "kickoff":
     case "resume":
     case "halftime":
@@ -173,7 +230,9 @@ function timelineMark(kind: string | undefined) {
     case "suspend":
       return "‖";
     case "card":
-      return "C";
+      return "■";
+    case "corner":
+      return "⌝";
     case "var":
       return "V";
     default:
@@ -193,6 +252,8 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastRefreshAt, setLastRefreshAt] = useState<number | null>(null);
+  const [boardTab, setBoardTab] = useState<"timeline" | "odds">("timeline");
+  const [scorePulse, setScorePulse] = useState(false);
 
   const selectedOutcome = useMemo(() => {
     if (!selected) return null;
@@ -207,11 +268,26 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
 
   const prematchMarkets = state.markets.filter((market) => !market.inRunning);
   const inPlayMarkets = state.markets.filter((market) => market.inRunning);
+  const matchLive =
+    state.live.phase === "in_play" ||
+    state.live.phase === "suspended" ||
+    state.live.phase === "finished";
   const showProjected =
     state.live.phase === "in_play" ||
     state.calls.some((call) => call.status === "pending");
   const showSettled =
     state.settledPoints > 0 || state.live.phase === "finished";
+
+  useEffect(() => {
+    if (matchLive) setBoardTab("timeline");
+    else setBoardTab("odds");
+  }, [matchLive, state.live.phase]);
+
+  useEffect(() => {
+    setScorePulse(true);
+    const id = window.setTimeout(() => setScorePulse(false), 900);
+    return () => window.clearTimeout(id);
+  }, [state.live.score.home, state.live.score.away]);
 
   const sheetCalls = useMemo(
     () =>
@@ -308,6 +384,86 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
     } finally {
       setBusy(false);
     }
+  }
+
+  function renderTimeline() {
+    const events = state.live.timeline
+      .filter((event) => event.visible !== false)
+      .slice(0, 14);
+    return (
+      <section className="rounded-2xl border border-[color:var(--line)] p-5 sm:p-6">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <h2 className="font-[family-name:var(--font-display)] text-xl tracking-wide text-[color:var(--chalk)]">
+            Match timeline
+          </h2>
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
+            Key moments
+          </p>
+        </div>
+        {events.length === 0 ? (
+          <p className="mt-4 rounded-xl border border-dashed border-[color:var(--line)] px-4 py-8 text-center text-sm text-[color:var(--muted)]">
+            No key moments yet — they appear as the match moves.
+          </p>
+        ) : (
+          <ol className="relative mt-6 space-y-0">
+            <div
+              aria-hidden
+              className="absolute bottom-3 left-[1.15rem] top-3 w-px bg-[color:var(--line)]"
+            />
+            {events.map((event) => {
+              const headline = event.headline ?? event.summary;
+              const scoreline =
+                event.homeScore !== null && event.awayScore !== null
+                  ? `${event.homeScore}–${event.awayScore}`
+                  : null;
+              return (
+                <li
+                  key={`${event.sequence}-${event.action}`}
+                  className={`relative grid grid-cols-[2.3rem_1fr] gap-3 py-3 sm:grid-cols-[2.3rem_minmax(0,1fr)_auto] sm:items-center ${
+                    event.kind === "goal" ? "animate-rise" : ""
+                  }`}
+                >
+                  <div className="relative z-10 flex justify-center">
+                    <span
+                      className={`flex h-9 w-9 items-center justify-center rounded-full font-mono text-[10px] font-semibold tracking-wide ${timelineTone(
+                        event.kind
+                      )}`}
+                    >
+                      {timelineMark(event.kind)}
+                    </span>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <span className="font-mono text-xs tabular-nums text-[color:var(--signal)]">
+                        {event.matchMinute !== null
+                          ? `${event.matchMinute}'`
+                          : "—"}
+                      </span>
+                      <p
+                        className={`text-sm sm:text-base ${
+                          event.kind === "goal"
+                            ? "font-semibold text-[color:var(--chalk)]"
+                            : "text-[color:var(--chalk)]"
+                        }`}
+                      >
+                        {headline}
+                      </p>
+                    </div>
+                  </div>
+                  {scoreline ? (
+                    <p className="col-start-2 font-mono text-sm tabular-nums text-[color:var(--muted)] sm:col-start-auto sm:text-right sm:text-base sm:text-[color:var(--chalk)]">
+                      {scoreline}
+                    </p>
+                  ) : (
+                    <span className="hidden sm:block" />
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </section>
+    );
   }
 
   function renderMarkets(title: string, rows: Market[], empty: string) {
@@ -415,10 +571,22 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
                           Move {delta}
                         </p>
                       ) : null}
+                      {outcome.bookmakerMinPct && outcome.bookmakerMaxPct ? (
+                        <p className="mt-1 font-mono text-[10px] tracking-[0.08em] text-[color:var(--muted)]">
+                          Books {outcome.bookmakerMinPct}–{outcome.bookmakerMaxPct}%
+                        </p>
+                      ) : null}
                     </button>
                   );
                 })}
               </div>
+              {market.bookmakers && market.bookmakers.length > 1 ? (
+                <BookmakerSpread
+                  bookmakers={market.bookmakers}
+                  home={state.fixture.home}
+                  away={state.fixture.away}
+                />
+              ) : null}
             </article>
           );
         })}
@@ -428,13 +596,24 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
 
   return (
     <div className="space-y-8">
+      {state.demo ? (
+        <DemoCinemaBar demo={state.demo} onChanged={refresh} />
+      ) : null}
+
       <section className="relative overflow-hidden rounded-[2rem] border border-[color:var(--line)] bg-[color:var(--panel)]/80">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(200,241,53,0.08),transparent_55%)]"
         />
+        <MatchEventFx
+          timeline={state.live.timeline}
+          home={state.fixture.home}
+          away={state.fixture.away}
+          score={state.live.score}
+          resetKey={state.fixture.sourceFixtureId}
+        />
         <div className="relative p-6 sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 pr-20">
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[color:var(--signal)]">
               {state.fixture.competitionName ?? "World Cup"}
             </p>
@@ -451,7 +630,11 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
               </p>
             </div>
             <div className="px-2 text-center sm:px-4">
-              <p className="font-[family-name:var(--font-display)] text-5xl tabular-nums tracking-wide text-[color:var(--chalk)] sm:text-6xl">
+              <p
+                className={`font-[family-name:var(--font-display)] text-5xl tabular-nums tracking-wide text-[color:var(--chalk)] sm:text-6xl ${
+                  scorePulse ? "animate-score-pulse" : ""
+                }`}
+              >
                 {state.live.score.home}
                 <span className="mx-1 text-[color:var(--muted)] sm:mx-2">–</span>
                 {state.live.score.away}
@@ -479,6 +662,15 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
               />
             ) : null}
           </dl>
+
+          {state.live.momentum ? (
+            <MomentumMeter
+              home={state.fixture.home}
+              away={state.fixture.away}
+              momentum={state.live.momentum}
+              sideStats={state.live.sideStats}
+            />
+          ) : null}
 
           {state.live.callsBlocked && state.live.phase !== "finished" && (
             <p className="mt-5 rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-center text-sm text-red-200">
@@ -518,29 +710,64 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
         </div>
       </section>
 
-      {inPlayMarkets.length > 0 || state.live.phase === "in_play"
-        ? renderMarkets(
-            "In-play markets",
-            inPlayMarkets,
-            "No live prices on the board yet."
-          )
+      {matchLive ? (
+        <div className="flex gap-2 rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/40 p-1.5">
+          <button
+            type="button"
+            onClick={() => setBoardTab("timeline")}
+            className={`flex-1 rounded-xl px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] transition ${
+              boardTab === "timeline"
+                ? "bg-[color:var(--signal)] text-[color:var(--ink)]"
+                : "text-[color:var(--muted)] hover:text-[color:var(--chalk)]"
+            }`}
+          >
+            Timeline
+          </button>
+          <button
+            type="button"
+            onClick={() => setBoardTab("odds")}
+            className={`flex-1 rounded-xl px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] transition ${
+              boardTab === "odds"
+                ? "bg-[color:var(--signal)] text-[color:var(--ink)]"
+                : "text-[color:var(--muted)] hover:text-[color:var(--chalk)]"
+            }`}
+          >
+            Live odds
+          </button>
+        </div>
+      ) : null}
+
+      {(!matchLive || boardTab === "timeline") && matchLive
+        ? renderTimeline()
         : null}
 
-      {prematchMarkets.length > 0 || state.live.phase === "prematch"
-        ? renderMarkets(
-            "Pre-match markets",
-            prematchMarkets,
-            "Pre-match board is closed."
-          )
-        : null}
+      {(!matchLive || boardTab === "odds") ? (
+        <>
+          {inPlayMarkets.length > 0 || state.live.phase === "in_play"
+            ? renderMarkets(
+                "In-play markets",
+                inPlayMarkets,
+                "No live prices on the board yet."
+              )
+            : null}
 
-      {inPlayMarkets.length === 0 &&
-      prematchMarkets.length === 0 &&
-      state.live.phase !== "in_play" &&
-      state.live.phase !== "prematch" ? (
-        <p className="rounded-2xl border border-dashed border-[color:var(--line)] px-5 py-8 text-center text-sm text-[color:var(--muted)]">
-          No open markets on this board.
-        </p>
+          {prematchMarkets.length > 0 || state.live.phase === "prematch"
+            ? renderMarkets(
+                "Pre-match markets",
+                prematchMarkets,
+                "Pre-match board is closed."
+              )
+            : null}
+
+          {inPlayMarkets.length === 0 &&
+          prematchMarkets.length === 0 &&
+          state.live.phase !== "in_play" &&
+          state.live.phase !== "prematch" ? (
+            <p className="rounded-2xl border border-dashed border-[color:var(--line)] px-5 py-8 text-center text-sm text-[color:var(--muted)]">
+              No open markets on this board.
+            </p>
+          ) : null}
+        </>
       ) : null}
 
       <section className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/50 p-5">
@@ -571,7 +798,9 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
               min={1}
               max={state.credits.remainingCredits}
               value={creditsInput}
-              onChange={(event) => setCreditsInput(Number(event.target.value))}
+              onChange={(event) =>
+                setCreditsInput(Number(event.target.value))
+              }
               className="mt-2 w-36 rounded-xl border border-[color:var(--line)] bg-[color:var(--pitch)] px-4 py-3 text-[color:var(--chalk)] outline-none ring-[color:var(--signal)] focus:ring-2"
             />
           </label>
@@ -599,7 +828,9 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
             </div>
           ) : (
             <p className="flex-1 text-sm text-[color:var(--muted)]">
-              Pick an outcome above to build your slip.
+              {matchLive && boardTab === "timeline"
+                ? "Switch to Live odds to pick an outcome, or keep watching the timeline."
+                : "Pick an outcome above to build your slip."}
             </p>
           )}
 
@@ -623,84 +854,7 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
         {error && <p className="mt-4 text-sm text-red-300">{error}</p>}
       </section>
 
-      <section className="rounded-2xl border border-[color:var(--line)] p-5 sm:p-6">
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <h2 className="font-[family-name:var(--font-display)] text-xl tracking-wide text-[color:var(--chalk)]">
-            Match timeline
-          </h2>
-          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
-            Key moments
-          </p>
-        </div>
-        {(() => {
-          const events = state.live.timeline
-            .filter((event) => event.visible !== false)
-            .slice(0, 14);
-          if (events.length === 0) {
-            return (
-              <p className="mt-4 rounded-xl border border-dashed border-[color:var(--line)] px-4 py-8 text-center text-sm text-[color:var(--muted)]">
-                No key moments yet — they appear as the match moves.
-              </p>
-            );
-          }
-          return (
-            <ol className="relative mt-6 space-y-0">
-              <div
-                aria-hidden
-                className="absolute bottom-3 left-[1.15rem] top-3 w-px bg-[color:var(--line)]"
-              />
-              {events.map((event) => {
-                const headline = event.headline ?? event.summary;
-                const scoreline =
-                  event.homeScore !== null && event.awayScore !== null
-                    ? `${event.homeScore}–${event.awayScore}`
-                    : null;
-                return (
-                  <li
-                    key={`${event.sequence}-${event.action}`}
-                    className="relative grid grid-cols-[2.3rem_1fr] gap-3 py-3 sm:grid-cols-[2.3rem_minmax(0,1fr)_auto] sm:items-center"
-                  >
-                    <div className="relative z-10 flex justify-center">
-                      <span
-                        className={`flex h-9 w-9 items-center justify-center rounded-full font-mono text-[10px] font-semibold tracking-wide ${timelineTone(
-                          event.kind
-                        )}`}
-                      >
-                        {timelineMark(event.kind)}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                        <span className="font-mono text-xs tabular-nums text-[color:var(--signal)]">
-                          {event.matchMinute !== null
-                            ? `${event.matchMinute}'`
-                            : "—"}
-                        </span>
-                        <p
-                          className={`text-sm sm:text-base ${
-                            event.kind === "goal"
-                              ? "font-semibold text-[color:var(--chalk)]"
-                              : "text-[color:var(--chalk)]"
-                          }`}
-                        >
-                          {headline}
-                        </p>
-                      </div>
-                    </div>
-                    {scoreline ? (
-                      <p className="col-start-2 font-mono text-sm tabular-nums text-[color:var(--muted)] sm:col-start-auto sm:text-right sm:text-base sm:text-[color:var(--chalk)]">
-                        {scoreline}
-                      </p>
-                    ) : (
-                      <span className="hidden sm:block" />
-                    )}
-                  </li>
-                );
-              })}
-            </ol>
-          );
-        })()}
-      </section>
+      {!matchLive ? renderTimeline() : null}
 
       {state.signedIn && (
         <MatchCallsSheet

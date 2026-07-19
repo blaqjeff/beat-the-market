@@ -26,6 +26,9 @@ type CallRow = {
   finalHomeScore: number | null;
   finalAwayScore: number | null;
   marketTitle?: string;
+  liveProbabilityBps?: number | null;
+  consensusDeltaBps?: number | null;
+  consensusLean?: "with_you" | "against_you" | "flat" | null;
 };
 
 function resultTone(result: string | null, status: string) {
@@ -115,7 +118,7 @@ function CallCard({
         </div>
         <div>
           <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
-            Price
+            Entry
           </dt>
           <dd className="mt-1 text-lg text-[color:var(--chalk)]">
             {(call.probabilityBps / 100).toFixed(1)}%
@@ -130,6 +133,30 @@ function CallCard({
           </dd>
         </div>
       </dl>
+
+      {open && call.liveProbabilityBps != null ? (
+        <p
+          className={`mt-3 rounded-xl border px-3 py-2 text-sm ${
+            call.consensusLean === "with_you"
+              ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
+              : call.consensusLean === "against_you"
+                ? "border-red-400/30 bg-red-400/10 text-red-200"
+                : "border-[color:var(--line)] text-[color:var(--muted)]"
+          }`}
+        >
+          Now {(call.liveProbabilityBps / 100).toFixed(1)}%
+          {call.consensusDeltaBps != null && call.consensusDeltaBps !== 0
+            ? ` · ${call.consensusDeltaBps > 0 ? "+" : "−"}${(
+                Math.abs(call.consensusDeltaBps) / 100
+              ).toFixed(1)} vs entry`
+            : ""}
+          {call.consensusLean === "with_you"
+            ? " · market moving with you"
+            : call.consensusLean === "against_you"
+              ? " · market moving against you"
+              : ""}
+        </p>
+      ) : null}
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--line)] pt-3">
         <p className="text-sm text-[color:var(--muted)]">
