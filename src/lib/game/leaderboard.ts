@@ -109,7 +109,7 @@ export async function getLeaderboard(limit = 50, userIds?: string[]) {
   return {
     rows,
     tieBreak:
-      "points DESC → accuracy DESC → decided calls DESC → username ASC",
+      "highest points, then best accuracy, then more finished calls, then username A–Z",
     totals: {
       ledgerPoints: ledgerTotal._sum.points ?? 0,
       callPointsAwarded: callTotal._sum.pointsAwarded ?? 0,

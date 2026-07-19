@@ -68,7 +68,8 @@ export default async function LeagueDetailPage({
           How ranking works
         </summary>
         <p className="mt-3 leading-6">
-          Same rules as the global board. Ties break by: {league.board.tieBreak}.
+          Same rules as the global board. If players are level, we rank by{" "}
+          {league.board.tieBreak}.
         </p>
       </details>
 

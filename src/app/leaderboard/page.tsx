@@ -38,7 +38,8 @@ export default async function LeaderboardPage() {
           How ranking works
         </summary>
         <p className="mt-3 leading-6">
-          Points come from settled calls only. Ties break by: {board.tieBreak}.
+          Points come from settled calls only. If players are level, we rank by{" "}
+          {board.tieBreak}.
         </p>
       </details>
 
