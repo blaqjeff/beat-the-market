@@ -58,6 +58,7 @@ next-env.d.ts
 /docs/*
 !/docs/TXLINE.md
 !/docs/CRITERIA_UPGRADES.md
+!/docs/BUSINESS.md
 AGENTS.md
 CLAUDE.md
 

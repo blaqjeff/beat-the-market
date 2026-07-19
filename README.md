@@ -34,6 +34,19 @@ remains for submission.
 | 6 Competition | Done | Rankings, profiles, private leagues, PnL share cards. |
 | 7 Deploy | Next | Hosted URL, managed DB, always-on worker, submission package. |
 
+## Business model
+
+Free skill game for fans; monetize **competition hosting**:
+
+1. **Free leagues** — invite-only boards (live today)
+2. **Premium leagues** — custom rules, season controls, reporting
+3. **Branded / sponsored leagues** — brands host co-branded competitions with
+   sponsor slots on match centre and share cards
+
+White-label apps (partner domain + theme) are a later channel, not the v1 pitch.
+
+See [docs/BUSINESS.md](docs/BUSINESS.md).
+
 ## Product loop
 
 1. Sign in (email magic link or Phantom).

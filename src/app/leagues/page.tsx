@@ -6,6 +6,36 @@ import { listUserLeagues } from "@/lib/game/leagues";
 
 export const dynamic = "force-dynamic";
 
+function BrandLeaguesPitch() {
+  return (
+    <section className="mt-10 rounded-[2rem] border border-[color:var(--signal)]/35 bg-[color:var(--signal)]/5 px-6 py-8 sm:px-8">
+      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[color:var(--signal)]">
+        Premium & branded leagues
+      </p>
+      <h2 className="mt-3 font-[family-name:var(--font-display)] text-2xl tracking-wide text-[color:var(--chalk)] sm:text-3xl">
+        Host a competition. Keep your brand in the frame.
+      </h2>
+      <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:var(--muted)] sm:text-base">
+        Free leagues are live for friends. Next up: premium boards with custom
+        ranking rules, and branded leagues where sponsors run a World Cup
+        confidence competition — co-branded leaderboard, match placements, and
+        share cards — without turning the game into wagering.
+      </p>
+      <ul className="mt-5 grid gap-2 text-sm text-[color:var(--chalk)] sm:grid-cols-3">
+        <li className="rounded-xl border border-[color:var(--line)] bg-[color:var(--pitch)]/40 px-4 py-3">
+          Custom rules & seasons
+        </li>
+        <li className="rounded-xl border border-[color:var(--line)] bg-[color:var(--pitch)]/40 px-4 py-3">
+          Sponsor slots on calls & shares
+        </li>
+        <li className="rounded-xl border border-[color:var(--line)] bg-[color:var(--pitch)]/40 px-4 py-3">
+          Brand-funded prizes, skill play only
+        </li>
+      </ul>
+    </section>
+  );
+}
+
 export default async function LeaguesPage() {
   let user: Awaited<ReturnType<typeof getCurrentUser>> = null;
   try {
@@ -26,7 +56,7 @@ export default async function LeaguesPage() {
           </h1>
           <p className="mt-4 text-[color:var(--muted)]">
             Create an invite-only board ranked the same way as the global
-            leaderboard.
+            leaderboard — then grow into premium and branded competitions.
           </p>
           <Link
             href="/login"
@@ -35,6 +65,7 @@ export default async function LeaguesPage() {
             Sign in to continue
           </Link>
         </section>
+        <BrandLeaguesPitch />
       </main>
     );
   }
@@ -50,11 +81,13 @@ export default async function LeaguesPage() {
         Your circles
       </h1>
       <p className="mt-4 max-w-2xl text-[color:var(--muted)]">
-        Invite-only boards. Share a code — member emails stay private.
+        Invite-only boards today. Premium rules and brand-hosted leagues are the
+        commercial path on top of this same loop.
       </p>
       <div className="mt-10">
         <LeagueManager initialLeagues={leagues} />
       </div>
+      <BrandLeaguesPitch />
     </main>
   );
 }

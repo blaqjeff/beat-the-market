@@ -13,11 +13,18 @@ Source: https://superteam.fun/earn/listing/consumer-and-fan-experiences
 | U6 | **World Cup live board on home** — multi-fixture scores/phase/momentum, live-first | Fan UX, Completeness | done |
 | U7 | **Bookmaker spread UI** — multi-book table + per-outcome range on markets | Fan UX, Originality | done |
 | U8 | **Past-match cinema** — step-through France–England replay for demo recording | Completeness, Real-Time (demoable) | done |
+| U9 | **Commercial path** — premium + branded/sponsored leagues (docs + leagues UI) | Commercial & Monetization | done |
 
 ## Explicitly deferred (not in this pass)
 
 - League push notifications / social “goal just projected +X”
 - Deploy / demo video (submission pack — separate Phase 7)
+- Paid checkout / brand admin console (pitch only for hackathon)
+
+## Monetization (for judges)
+
+See [BUSINESS.md](./BUSINESS.md): free leagues → premium rules → branded/sponsored
+competitions. White-label is a later channel.
 
 ## How to see it (demo recording)
 
