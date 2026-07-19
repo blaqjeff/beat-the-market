@@ -92,7 +92,7 @@ export function LeagueManager({ initialLeagues }: { initialLeagues: LeagueRow[] 
 
   return (
     <div className="space-y-8">
-      <section className="grid gap-4 sm:grid-cols-2">
+      <section id="create-league" className="grid scroll-mt-24 gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-[color:var(--line)] p-5">
           <h2 className="font-[family-name:var(--font-display)] text-xl tracking-wide text-[color:var(--chalk)]">
             Create private league

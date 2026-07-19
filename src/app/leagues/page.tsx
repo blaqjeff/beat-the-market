@@ -6,7 +6,20 @@ import { listUserLeagues } from "@/lib/game/leagues";
 
 export const dynamic = "force-dynamic";
 
-function BrandLeaguesPitch() {
+const BRAND_INQUIRY_HREF =
+  "https://github.com/blaqjeff/beat-the-market/issues/new?title=Branded%20league%20inquiry&labels=partnership&body=" +
+  encodeURIComponent(
+    [
+      "Brand / org:",
+      "Campaign window:",
+      "Audience (geo / size):",
+      "What you want (sponsored board, custom rules, prizes):",
+      "",
+      "We'll follow up on premium & branded league hosting.",
+    ].join("\n")
+  );
+
+function BrandLeaguesPitch({ signedIn }: { signedIn: boolean }) {
   return (
     <section className="mt-10 rounded-[2rem] border border-[color:var(--signal)]/35 bg-[color:var(--signal)]/5 px-6 py-8 sm:px-8">
       <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[color:var(--signal)]">
@@ -32,6 +45,31 @@ function BrandLeaguesPitch() {
           Brand-funded prizes, skill play only
         </li>
       </ul>
+      <div className="mt-7 flex flex-wrap gap-3">
+        <a
+          href={BRAND_INQUIRY_HREF}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex rounded-xl bg-[color:var(--signal)] px-5 py-3 text-sm font-semibold text-[color:var(--ink)] transition hover:brightness-110"
+        >
+          Request a branded league
+        </a>
+        {signedIn ? (
+          <a
+            href="#create-league"
+            className="inline-flex rounded-xl border border-[color:var(--line)] px-5 py-3 text-sm font-semibold text-[color:var(--chalk)] transition hover:border-[color:var(--signal)]/50"
+          >
+            Start with a free league
+          </a>
+        ) : (
+          <Link
+            href="/login"
+            className="inline-flex rounded-xl border border-[color:var(--line)] px-5 py-3 text-sm font-semibold text-[color:var(--chalk)] transition hover:border-[color:var(--signal)]/50"
+          >
+            Sign in to create a free league
+          </Link>
+        )}
+      </div>
     </section>
   );
 }
@@ -65,7 +103,7 @@ export default async function LeaguesPage() {
             Sign in to continue
           </Link>
         </section>
-        <BrandLeaguesPitch />
+        <BrandLeaguesPitch signedIn={false} />
       </main>
     );
   }
@@ -87,7 +125,7 @@ export default async function LeaguesPage() {
       <div className="mt-10">
         <LeagueManager initialLeagues={leagues} />
       </div>
-      <BrandLeaguesPitch />
+      <BrandLeaguesPitch signedIn />
     </main>
   );
 }

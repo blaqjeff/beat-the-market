@@ -34,6 +34,9 @@ Brands (drinks, telcos, clubs, media) pay to host a competition:
 Pitch: *“Own a confidence league for your fans during the tournament — we
 supply TxLINE-priced calls, settlement, and rankings.”*
 
+Inquiry CTA on `/leagues`: **Request a branded league** opens a GitHub issue
+template (`partnership` label). Swap to a partners email when you have one.
+
 ## Later channel: white-label
 
 A fully branded standalone app (custom domain, theme, auth) for partners who
