@@ -18,7 +18,7 @@ export default async function MatchPage({
   const state = await getMatchState(fixtureId, user?.id);
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
+    <main className="mx-auto w-full max-w-6xl px-3 py-6 sm:px-6 sm:py-12">
       <MatchCentre initialState={state} />
     </main>
   );

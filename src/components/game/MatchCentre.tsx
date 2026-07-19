@@ -172,11 +172,11 @@ function formatKickoff(iso: string) {
 
 function HeroStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="w-[9.75rem] rounded-xl border border-[color:var(--line)]/80 bg-[color:var(--pitch)]/40 px-3 py-2.5">
+    <div className="w-[7.5rem] rounded-xl border border-[color:var(--line)]/80 bg-[color:var(--pitch)]/40 px-2.5 py-2 sm:w-[9.75rem] sm:px-3 sm:py-2.5">
       <dt className="font-mono text-[9px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
         {label}
       </dt>
-      <dd className="mt-1 truncate text-sm tabular-nums text-[color:var(--chalk)]">
+      <dd className="mt-1 truncate text-xs tabular-nums text-[color:var(--chalk)] sm:text-sm">
         {value}
       </dd>
     </div>
@@ -595,7 +595,7 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
         <DemoCinemaBar demo={state.demo} onChanged={refresh} />
       ) : null}
 
-      <section className="relative overflow-hidden rounded-[2rem] border border-[color:var(--line)] bg-[color:var(--panel)]/80">
+      <section className="relative overflow-hidden rounded-[1.5rem] border border-[color:var(--line)] bg-[color:var(--panel)]/80 sm:rounded-[2rem]">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(200,241,53,0.08),transparent_55%)]"
@@ -607,27 +607,27 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
           away={state.fixture.away}
           score={state.live.score}
         />
-        <div className="relative p-6 sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-3 pr-20">
+        <div className="relative p-4 sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-2 pr-14 sm:gap-3 sm:pr-20">
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[color:var(--signal)]">
               {state.fixture.competitionName ?? "World Cup"}
             </p>
-            <p className="rounded-full border border-[color:var(--line)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
+            <p className="rounded-full border border-[color:var(--line)] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--muted)] sm:px-3">
               {phaseLabel(state.live.phase)}
               {state.live.clock.display ? ` · ${state.live.clock.display}` : ""}
             </p>
           </div>
 
-          <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
+          <div className="mt-6 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:mt-8 sm:gap-6">
             <div className="min-w-0 text-right">
-              <p className="font-[family-name:var(--font-display)] text-2xl leading-tight tracking-wide text-[color:var(--chalk)] sm:text-4xl">
+              <p className="break-words font-[family-name:var(--font-display)] text-lg leading-tight tracking-wide text-[color:var(--chalk)] sm:text-4xl">
                 {state.fixture.home}
               </p>
             </div>
-            <div className="px-2 text-center sm:px-4">
+            <div className="px-1 text-center sm:px-4">
               <p
                 key={`${state.live.score.home}-${state.live.score.away}`}
-                className="animate-score-pulse font-[family-name:var(--font-display)] text-5xl tabular-nums tracking-wide text-[color:var(--chalk)] sm:text-6xl"
+                className="animate-score-pulse font-[family-name:var(--font-display)] text-4xl tabular-nums tracking-wide text-[color:var(--chalk)] sm:text-6xl"
               >
                 {state.live.score.home}
                 <span className="mx-1 text-[color:var(--muted)] sm:mx-2">–</span>
@@ -635,7 +635,7 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
               </p>
             </div>
             <div className="min-w-0">
-              <p className="font-[family-name:var(--font-display)] text-2xl leading-tight tracking-wide text-[color:var(--chalk)] sm:text-4xl">
+              <p className="break-words font-[family-name:var(--font-display)] text-lg leading-tight tracking-wide text-[color:var(--chalk)] sm:text-4xl">
                 {state.fixture.away}
               </p>
             </div>

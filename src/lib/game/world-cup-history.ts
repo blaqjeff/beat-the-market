@@ -34,14 +34,28 @@ type HistoryFile = {
   }>;
 };
 
-function resultLine(home: string, away: string, homeScore: number, awayScore: number) {
+function resultLine(
+  home: string,
+  away: string,
+  homeScore: number,
+  awayScore: number,
+  summary?: string
+) {
+  if (summary) {
+    const pens = summary.match(/^(.+?) win on penalties/i);
+    if (pens?.[1]) return `${pens[1]} win (pens)`;
+    if (/after extra time/i.test(summary)) {
+      if (homeScore > awayScore) return `${home} win (AET)`;
+      if (awayScore > homeScore) return `${away} win (AET)`;
+    }
+  }
   if (homeScore > awayScore) return `${home} win`;
   if (awayScore > homeScore) return `${away} win`;
   return "Draw";
 }
 
 export async function getWorldCupHistory(
-  limit = 80
+  limit = 120
 ): Promise<{
   tournament: string;
   matches: Array<
@@ -139,7 +153,8 @@ export async function getWorldCupHistory(
         match.home,
         match.away,
         match.homeScore,
-        match.awayScore
+        match.awayScore,
+        match.summary
       ),
       playedLabel: new Date(match.playedAt).toLocaleDateString("en-GB", {
         month: "short",

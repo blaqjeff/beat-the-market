@@ -115,7 +115,7 @@ export default async function LeaguesPage() {
       <p className="font-mono text-xs uppercase tracking-[0.22em] text-[color:var(--signal)]">
         Private leagues
       </p>
-      <h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl tracking-wide text-[color:var(--chalk)]">
+      <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl tracking-wide text-[color:var(--chalk)] sm:text-4xl">
         Your circles
       </h1>
       <p className="mt-4 max-w-2xl text-[color:var(--muted)]">

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { WorldCupHistoryList } from "@/components/game/WorldCupHistoryList";
 import { FeedStatusBanner } from "@/components/shell/FeedStatusBanner";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getHomeFixtureBoard } from "@/lib/game/home-board";
@@ -28,7 +29,7 @@ export default async function Home() {
   }
 
   try {
-    history = await getWorldCupHistory(80);
+    history = await getWorldCupHistory(120);
   } catch {
     history = { tournament: "FIFA World Cup 2026", matches: [] };
   }
@@ -51,25 +52,25 @@ export default async function Home() {
   const liveCount = fixtures.filter((row) => row.phasePill === "Live").length;
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-16">
       <FeedStatusBanner />
-      <section className="relative overflow-hidden rounded-[2rem] border border-[color:var(--line)] bg-[color:var(--panel)]/70 px-6 py-12 sm:px-10 sm:py-16">
-        <div className="signal-line pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[color:var(--signal)] to-transparent" />
-        <p className="animate-rise font-mono text-xs uppercase tracking-[0.24em] text-[color:var(--signal)]">
+      <section className="relative overflow-hidden rounded-[1.5rem] border border-[color:var(--line)] bg-[color:var(--panel)]/70 px-5 py-10 sm:rounded-[2rem] sm:px-10 sm:py-16">
+        <div className="signal-line pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[color:var(--signal)] to-transparent sm:inset-x-8" />
+        <p className="animate-rise font-mono text-[10px] uppercase tracking-[0.22em] text-[color:var(--signal)] sm:text-xs sm:tracking-[0.24em]">
           World Cup confidence game
         </p>
-        <h1 className="animate-rise-delay mt-5 max-w-3xl font-[family-name:var(--font-display)] text-5xl leading-[0.95] tracking-tight text-[color:var(--chalk)] sm:text-7xl">
+        <h1 className="animate-rise-delay mt-4 max-w-3xl font-[family-name:var(--font-display)] text-4xl leading-[0.95] tracking-tight text-[color:var(--chalk)] sm:mt-5 sm:text-7xl">
           Beat the Market
         </h1>
-        <p className="animate-rise-delay mt-6 max-w-2xl text-lg leading-8 text-[color:var(--muted)]">
+        <p className="animate-rise-delay mt-5 max-w-2xl text-base leading-7 text-[color:var(--muted)] sm:mt-6 sm:text-lg sm:leading-8">
           Spend confidence credits on live consensus prices. Call the result,
           chase the total, and prove you can out-read the market as the match
           moves.
         </p>
-        <div className="mt-9 flex flex-wrap gap-3">
+        <div className="mt-7 flex flex-wrap gap-3 sm:mt-9">
           <Link
             href={primaryHref}
-            className="rounded-xl bg-[color:var(--signal)] px-5 py-3 font-semibold text-[color:var(--ink)] transition hover:brightness-110"
+            className="rounded-xl bg-[color:var(--signal)] px-5 py-3 text-sm font-semibold text-[color:var(--ink)] transition hover:brightness-110 sm:text-base"
           >
             {primaryLabel}
           </Link>
@@ -94,11 +95,11 @@ export default async function Home() {
 
       <section id="matches" className="mt-10">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
+          <div className="min-w-0">
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">
               World Cup board
             </p>
-            <h2 className="mt-2 font-[family-name:var(--font-display)] text-2xl tracking-wide text-[color:var(--chalk)]">
+            <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl tracking-wide text-[color:var(--chalk)] sm:text-2xl">
               Live scores & kickoffs
             </h2>
           </div>
@@ -110,7 +111,7 @@ export default async function Home() {
         </div>
 
         {fixtures.length === 0 ? (
-          <div className="mt-4 rounded-2xl border border-dashed border-[color:var(--line)] px-6 py-10 text-center text-[color:var(--muted)]">
+          <div className="mt-4 rounded-2xl border border-dashed border-[color:var(--line)] px-5 py-10 text-center text-sm text-[color:var(--muted)] sm:px-6">
             Match boards will appear here once fixtures are available.
           </div>
         ) : (
@@ -127,18 +128,18 @@ export default async function Home() {
                 <li key={fixture.sourceFixtureId}>
                   <Link
                     href={`/matches/${fixture.sourceFixtureId}`}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/40 px-5 py-4 transition hover:border-[color:var(--signal)]"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/40 px-4 py-4 transition hover:border-[color:var(--signal)] sm:px-5"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-[family-name:var(--font-display)] text-lg tracking-wide text-[color:var(--chalk)]">
+                        <p className="break-words font-[family-name:var(--font-display)] text-base tracking-wide text-[color:var(--chalk)] sm:text-lg">
                           {fixture.home}
                           {fixture.score ? (
-                            <span className="mx-2 font-mono tabular-nums text-[color:var(--signal)]">
+                            <span className="mx-1.5 font-mono tabular-nums text-[color:var(--signal)] sm:mx-2">
                               {fixture.score.home}–{fixture.score.away}
                             </span>
                           ) : (
-                            <span className="mx-2 text-[color:var(--muted)]">
+                            <span className="mx-1.5 text-[color:var(--muted)] sm:mx-2">
                               vs
                             </span>
                           )}
@@ -157,7 +158,7 @@ export default async function Home() {
                             : ""}
                         </span>
                       </div>
-                      <p className="mt-1 text-sm text-[color:var(--muted)]">
+                      <p className="mt-1 text-sm leading-6 text-[color:var(--muted)]">
                         {fixture.competitionName ?? "World Cup"}
                         <span className="mx-2 text-[color:var(--line)]">·</span>
                         {live ? "In play" : `Kickoff ${kickoff}`}
@@ -171,7 +172,7 @@ export default async function Home() {
                         ) : null}
                       </p>
                     </div>
-                    <span className="font-mono text-xs uppercase tracking-[0.18em] text-[color:var(--signal)]">
+                    <span className="shrink-0 font-mono text-xs uppercase tracking-[0.18em] text-[color:var(--signal)]">
                       Open
                     </span>
                   </Link>
@@ -182,79 +183,10 @@ export default async function Home() {
         )}
       </section>
 
-      {history.matches.length > 0 ? (
-        <section id="history" className="mt-14 scroll-mt-24">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="font-mono text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">
-                Results archive
-              </p>
-              <h2 className="mt-2 font-[family-name:var(--font-display)] text-2xl tracking-wide text-[color:var(--chalk)]">
-                World Cup history
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm text-[color:var(--muted)]">
-                Final scores and short recaps from earlier {history.tournament}{" "}
-                matches — newest first.
-              </p>
-            </div>
-            <p className="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--muted)]">
-              {history.matches.length} played
-            </p>
-          </div>
-
-          <ul className="mt-5 grid gap-3">
-            {history.matches.map((match) => {
-              const body = (
-                <>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full border border-[color:var(--line)] px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
-                      {match.round}
-                    </span>
-                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--muted)]">
-                      {match.playedLabel}
-                    </span>
-                    {match.venue ? (
-                      <span className="text-xs text-[color:var(--muted)]">
-                        · {match.venue}
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-2 font-[family-name:var(--font-display)] text-lg tracking-wide text-[color:var(--chalk)]">
-                    {match.home}
-                    <span className="mx-2 font-mono tabular-nums text-[color:var(--signal)]">
-                      {match.homeScore}–{match.awayScore}
-                    </span>
-                    {match.away}
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-[color:var(--chalk)]/80">
-                    {match.resultLabel}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
-                    {match.summary}
-                  </p>
-                </>
-              );
-
-              return (
-                <li key={match.id}>
-                  {match.sourceFixtureId ? (
-                    <Link
-                      href={`/matches/${match.sourceFixtureId}`}
-                      className="block rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/30 px-5 py-4 transition hover:border-[color:var(--signal)]/50"
-                    >
-                      {body}
-                    </Link>
-                  ) : (
-                    <div className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--panel)]/30 px-5 py-4">
-                      {body}
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ) : null}
+      <WorldCupHistoryList
+        tournament={history.tournament}
+        matches={history.matches}
+      />
     </main>
   );
 }

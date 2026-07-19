@@ -88,7 +88,7 @@ export function DemoCinemaBar({
           <button
             type="button"
             onClick={() => void run("reset")}
-            className="rounded-xl border border-[color:var(--line)] px-3 py-2 text-sm font-semibold text-[color:var(--chalk)]"
+            className="rounded-xl border border-[color:var(--line)] px-3 py-2.5 text-sm font-semibold text-[color:var(--chalk)]"
           >
             Reset
           </button>
@@ -96,7 +96,7 @@ export function DemoCinemaBar({
             type="button"
             disabled={demo.done}
             onClick={() => void run("advance")}
-            className="rounded-xl bg-[color:var(--signal)] px-3 py-2 text-sm font-semibold text-[color:var(--ink)] disabled:opacity-40"
+            className="rounded-xl bg-[color:var(--signal)] px-3 py-2.5 text-sm font-semibold text-[color:var(--ink)] disabled:opacity-40"
           >
             {demo.done ? "At full time" : "Advance match"}
           </button>
@@ -104,7 +104,7 @@ export function DemoCinemaBar({
             type="button"
             disabled={!demo.done}
             onClick={() => void run("settle")}
-            className="rounded-xl border border-[color:var(--signal)]/50 px-3 py-2 text-sm font-semibold text-[color:var(--signal)] disabled:opacity-40"
+            className="rounded-xl border border-[color:var(--signal)]/50 px-3 py-2.5 text-sm font-semibold text-[color:var(--signal)] disabled:opacity-40"
           >
             Settle calls
           </button>

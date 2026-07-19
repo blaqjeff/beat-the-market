@@ -28,6 +28,11 @@ body {
   color: var(--foreground);
   font-family: var(--font-body), "Segoe UI", sans-serif;
   min-height: 100dvh;
+  overflow-x: clip;
+}
+
+html {
+  overflow-x: clip;
 }
 
 button,

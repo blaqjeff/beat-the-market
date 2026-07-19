@@ -13,7 +13,7 @@ export default async function LeaderboardPage() {
       <p className="font-mono text-xs uppercase tracking-[0.22em] text-[color:var(--signal)]">
         Competition
       </p>
-      <h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl tracking-wide text-[color:var(--chalk)] sm:text-5xl">
+      <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl tracking-wide text-[color:var(--chalk)] sm:text-5xl">
         Leaderboard
       </h1>
       <p className="mt-4 max-w-2xl text-[color:var(--muted)]">

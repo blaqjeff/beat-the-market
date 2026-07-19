@@ -20,14 +20,14 @@ export function NavLinks() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex items-center gap-1 overflow-x-auto">
+    <nav className="flex w-max items-center gap-1">
       {links.map((link) => {
         const active = isActive(pathname, link.href);
         return (
           <Link
             key={link.href}
             href={link.href}
-            className={`rounded-full px-3.5 py-1.5 text-sm transition ${
+            className={`shrink-0 rounded-full px-3 py-1.5 text-sm transition sm:px-3.5 ${
               active
                 ? "bg-[color:var(--signal)]/15 text-[color:var(--signal)]"
                 : "text-[color:var(--muted)] hover:bg-white/5 hover:text-[color:var(--chalk)]"
