@@ -81,13 +81,12 @@ Render treats it as a web service.
 ### Keep-alive (required on Free)
 
 Render **spins down** Free web services after ~15 minutes with no HTTP traffic.
-That would kill the SSE feed. Three free layers:
+That would kill the SSE feed. Free layers:
 
-1. **In-process self-ping** every 3 minutes to `RENDER_EXTERNAL_URL/health`
-   (keeps the idle timer reset while the process is awake).
-2. **GitHub Actions** workflows `keep-alive-worker` + `keep-alive-worker-b`
-   (wake the service if it ever sleeps; $0).
-3. Optional third: https://cron-job.org every 5 minutes → `/health`.
+1. **In-process self-ping** every 3 minutes to the public `/health` URL
+   (resets the idle timer while the process is awake).
+2. **cron-job.org** (free, independent of GitHub) — every 5 minutes → `/health`.
+3. **GitHub Actions** `keep-alive-worker.yml` as a backup wake-up only.
 
 750 free instance hours/month ≈ enough for continuous run through early August.
 
