@@ -41,7 +41,7 @@ function resultLine(home: string, away: string, homeScore: number, awayScore: nu
 }
 
 export async function getWorldCupHistory(
-  limit = 40
+  limit = 80
 ): Promise<{
   tournament: string;
   matches: Array<

@@ -28,7 +28,7 @@ export default async function Home() {
   }
 
   try {
-    history = await getWorldCupHistory(40);
+    history = await getWorldCupHistory(80);
   } catch {
     history = { tournament: "FIFA World Cup 2026", matches: [] };
   }

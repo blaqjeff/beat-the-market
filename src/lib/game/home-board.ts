@@ -40,7 +40,9 @@ export async function getHomeFixtureBoard(limit = 24): Promise<HomeFixtureCard[]
     take: Math.max(limit * 2, 48),
   });
 
-  const cards = rows.map((row) => {
+  const cards: HomeFixtureCard[] = [];
+
+  for (const row of rows) {
     const live = buildLiveBoard({
       gameState: row.gameState,
       participant1IsHome: row.participant1IsHome,
@@ -57,13 +59,15 @@ export async function getHomeFixtureBoard(limit = 24): Promise<HomeFixtureCard[]
       })),
     });
 
+    // Finished games live in the History section — keep this board for live / upcoming.
+    if (live.phase === "finished") continue;
+
     const showScore =
       live.phase === "in_play" ||
-      live.phase === "finished" ||
       live.phase === "suspended" ||
       live.score.home + live.score.away > 0;
 
-    return {
+    cards.push({
       sourceFixtureId: row.sourceFixtureId,
       home: row.homeParticipant.name,
       away: row.awayParticipant.name,
@@ -78,14 +82,8 @@ export async function getHomeFixtureBoard(limit = 24): Promise<HomeFixtureCard[]
           ? live.momentum.label
           : null,
       sortRank: phaseRank(live.phase, row.startsAt),
-      phase: live.phase,
-    } satisfies HomeFixtureCard & { phase: string };
-  });
+    });
+  }
 
-  // Finished games live in the History section — keep this board for live / upcoming.
-  return cards
-    .filter((row) => row.phase !== "finished")
-    .sort((a, b) => a.sortRank - b.sortRank)
-    .slice(0, limit)
-    .map(({ phase: _phase, ...card }) => card);
+  return cards.sort((a, b) => a.sortRank - b.sortRank).slice(0, limit);
 }
