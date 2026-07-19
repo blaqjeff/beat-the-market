@@ -141,12 +141,19 @@ export class TxlineClient {
         ? TXLINE_ENDPOINTS.oddsStream
         : TXLINE_ENDPOINTS.scoresStream;
 
-    return this.request(endpoint, {
-      headers: {
-        Accept: "text/event-stream",
-        "Cache-Control": "no-cache",
+    // SSE must stay open for hours. Do not apply the short REST timeout —
+    // AbortSignal.timeout(30s) was killing live odds/scores every half minute.
+    return this.request(
+      endpoint,
+      {
+        headers: {
+          Accept: "text/event-stream",
+          "Cache-Control": "no-cache",
+        },
       },
-    });
+      undefined,
+      null
+    );
   }
 
   async *stream(stream: TxlineStream): AsyncGenerator<SseMessage> {
@@ -165,12 +172,18 @@ export class TxlineClient {
   private async request(
     endpoint: string,
     init: RequestInit = {},
-    query?: Record<string, string | number>
+    query?: Record<string, string | number>,
+    /** Pass `null` for long-lived SSE (no overall request timeout). */
+    timeoutMs: number | null = this.timeoutMs
   ): Promise<Response> {
     const url = new URL(endpoint, this.apiOrigin);
     for (const [key, value] of Object.entries(query ?? {})) {
       url.searchParams.set(key, String(value));
     }
+
+    const signal =
+      init.signal ??
+      (timeoutMs === null ? undefined : AbortSignal.timeout(timeoutMs));
 
     const response = await this.fetchImplementation(url, {
       ...init,
@@ -179,7 +192,7 @@ export class TxlineClient {
         "X-Api-Token": this.apiToken,
         ...init.headers,
       },
-      signal: init.signal ?? AbortSignal.timeout(this.timeoutMs),
+      signal,
     });
 
     if (!response.ok) {
