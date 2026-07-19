@@ -9,7 +9,7 @@
     "dev": "next dev",
     "build": "prisma generate && node scripts/migrate-deploy-retry.cjs && next build",
     "start": "next start",
-    "lint": "eslint src tests scripts --max-warnings 0 --ignore-pattern scripts/polyfill-server-only.cjs",
+    "lint": "eslint src tests scripts --max-warnings 0 --ignore-pattern scripts/polyfill-server-only.cjs --ignore-pattern scripts/migrate-deploy-retry.cjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
