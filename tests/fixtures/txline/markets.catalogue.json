@@ -8,8 +8,27 @@
       "fixtureId": 18257739,
       "match": "Spain vs Argentina",
       "gameState": 1,
-      "oddsRows": 0,
-      "superOddsTypes": []
+      "oddsRows": 11,
+      "superOddsTypes": [
+        {
+          "type": "1X2_PARTICIPANT_RESULT",
+          "count": 1,
+          "inRunning": false,
+          "marketParameters": [null],
+          "marketPeriods": [null],
+          "priceNames": ["part1", "draw", "part2"]
+        },
+        {
+          "type": "ASIANHANDICAP_PARTICIPANT_GOALS",
+          "count": 3,
+          "inRunning": false
+        },
+        {
+          "type": "OVERUNDER_PARTICIPANT_GOALS",
+          "count": 7,
+          "inRunning": false
+        }
+      ]
     },
     {
       "fixtureId": 18257865,
