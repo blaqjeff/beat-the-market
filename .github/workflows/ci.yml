@@ -38,8 +38,10 @@ jobs:
           node-version: 24
           cache: npm
 
+      # Use npm install (not npm ci): optional nested deps like @emnapi/*
+      # resolve differently across Node/npm patch versions and break npm ci.
       - name: Install
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Migrate
         run: npm run db:migrate
