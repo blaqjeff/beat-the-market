@@ -19,6 +19,7 @@ Related documents:
 
 - [TXLINE.md](./TXLINE.md) — TxLINE endpoints and feed behaviour
 - [BUSINESS.md](./BUSINESS.md) — commercial model
+- [DEPLOY.md](./DEPLOY.md) — production hosting
 - [README.md](../README.md) — install commands and local setup
 
 ---

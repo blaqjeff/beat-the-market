@@ -76,4 +76,7 @@ node_modules_old/
 .env*
 
 .tmp-prod-env.json
+.tmp-vercel-prod.env
+.env.worker*
+render.yaml.bak
 .tmp/

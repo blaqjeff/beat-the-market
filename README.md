@@ -44,7 +44,7 @@ Call prices always use the TxLINE consensus book (`BookmakerId` 10021).
 
 ## Production deploy
 
-Free stack: **Vercel** (app) + **Neon** (Postgres) + **Fly.io** (ingestion worker).
+Free stack: **Vercel** (app) + **Neon** (Postgres) + **Render** (ingestion worker).
 
 Do not run the practice cinema on production. Do not set `DEMO_CINEMA`.
 

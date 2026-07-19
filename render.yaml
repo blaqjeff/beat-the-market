@@ -1,0 +1,30 @@
+# Free always-on-ish TxLINE worker for Render.
+# Free web services sleep after 15m idle — ping /health every 5–10 minutes
+# from https://cron-job.org (free) so the SSE process stays up.
+services:
+  - type: web
+    name: beat-the-market-worker
+    runtime: docker
+    dockerfilePath: ./Dockerfile.worker
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: TXLINE_GUEST_JWT
+        sync: false
+      - key: TXLINE_API_TOKEN
+        sync: false
+      - key: TXLINE_NETWORK
+        value: mainnet
+      - key: TXLINE_COMPETITION_IDS
+        value: "72"
+      - key: SOLANA_RPC_URL
+        sync: false

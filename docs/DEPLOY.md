@@ -1,125 +1,123 @@
 # Production deployment
 
-## Recommended free stack
+## Recommended free stack (through early August)
 
 | Piece | Service | Why |
 | --- | --- | --- |
-| Web app | **Vercel** (Hobby) | Fits Next.js |
-| Database | **Neon** (Free) | Managed Postgres, works with Vercel |
-| Ingestion worker | **Fly.io** (free allowance) | Keeps a long-running TxLINE SSE process awake |
+| Web app | **Vercel** (Hobby) | Fits Next.js — $0 |
+| Database | **Neon** (Free) | Managed Postgres — $0 |
+| Ingestion worker | **Render** (Free web service) | Long-running Node + SSE — $0 |
 
-### Why not Cloudflare Workers for the feed worker
+### Why not Cloudflare Workers
 
-TxLINE live odds/scores use **long-lived SSE connections**.
+TxLINE live odds/scores need a **long-lived SSE** process. Cloudflare Workers
+are request-scoped. Do not put `ingestion:worker` there.
 
-Cloudflare Workers are request-scoped. They are not a good host for a process
-that must stay connected for hours. Do not put `ingestion:worker` on Workers.
+### Why not Fly.io (for now)
 
-If you only use Cloudflare later, use it for DNS or edge cache — not for this
-worker.
+Fly requires a card and bills for always-on machines (~$2–3/mo). Skip until
+budget allows.
 
 ### Production rules
 
 - Do **not** set `DEMO_CINEMA`.
 - Do **not** run cinema reset scripts against production.
 - Set real TxLINE credentials.
-- Set `SENDBYTE_API_KEY` and a verified `EMAIL_FROM` (required in production).
+- Set `SENDBYTE_API_KEY` and a verified `EMAIL_FROM` on Vercel.
 - Set `APP_URL` to the public `https://` origin.
-Do **not** set `NODE_ENV` in the Vercel dashboard. Vercel sets it during
-build and runtime. Setting `NODE_ENV=production` as a project env var can skip
-devDependencies and break the CSS build.
+- Do **not** set `NODE_ENV` in the Vercel dashboard (breaks `npm install` /
+  Tailwind if set as a project env var).
 
 ---
 
-## 1. Create the Neon database
+## 1. Neon database
 
 1. Sign up at https://neon.tech
-2. Create a project (region near your users).
-3. Copy the connection string (`DATABASE_URL`).
-4. Prefer the pooled URL for the Vercel app if Neon shows both.
+2. Create a project.
+3. Copy `DATABASE_URL` (pooled URL preferred for Vercel).
 
 ---
 
-## 2. Deploy the web app on Vercel
-
-### First link
+## 2. Vercel web app
 
 ```bash
 npx vercel link
 npx vercel env add DATABASE_URL production
-npx vercel env add AUTH_SECRET production
-npx vercel env add APP_URL production
-npx vercel env add SENDBYTE_API_KEY production
-npx vercel env add EMAIL_FROM production
-npx vercel env add TXLINE_GUEST_JWT production
-npx vercel env add TXLINE_API_TOKEN production
-npx vercel env add TXLINE_NETWORK production
-# optional
-npx vercel env add SOLANA_RPC_URL production
-npx vercel env add TXLINE_COMPETITION_IDS production
-```
-
-Set `APP_URL` to the final production URL (for example
-`https://beat-the-market.vercel.app` or your custom domain).
-
-### Deploy
-
-```bash
+# … AUTH_SECRET, APP_URL, SENDBYTE_*, TXLINE_*, etc.
 npx vercel --prod
 ```
 
-The build runs `prisma generate`, `prisma migrate deploy`, then `next build`.
-
-Confirm:
-
-- `https://<your-app>/api/health`
-- Sign-in works
-- No yellow Demo cinema bar
+Confirm `https://<your-app>/api/health` — web + database up, no Demo cinema bar.
 
 ---
 
-## 3. Deploy the ingestion worker on Fly.io
+## 3. Render free worker (always-on via keep-alive)
 
-The worker process:
+The worker is `npm run ingestion:worker`. It also serves `GET /health` so
+Render treats it as a web service.
 
-```bash
-npm run ingestion:worker
-```
+### Deploy
 
-### Setup
+1. Sign up at https://render.com (free — no card required for Free plan).
+2. **New → Blueprint** and connect the GitHub repo, **or** New → Web Service
+   with:
+   - Runtime: **Docker**
+   - Dockerfile path: `Dockerfile.worker`
+   - Instance type: **Free**
+   - Health check path: `/health`
+3. Set env vars (same Neon DB + TxLINE secrets as Vercel):
 
-```bash
-# Install flyctl, then:
-fly auth login
-fly launch --config fly.worker.toml --no-deploy
-fly secrets set DATABASE_URL="..." AUTH_SECRET="..." TXLINE_GUEST_JWT="..." TXLINE_API_TOKEN="..." TXLINE_NETWORK="mainnet" APP_URL="https://your-app.vercel.app" NODE_ENV="production"
-fly deploy --config fly.worker.toml
-```
+   - `DATABASE_URL`
+   - `AUTH_SECRET`
+   - `APP_URL` = your Vercel URL
+   - `TXLINE_GUEST_JWT`
+   - `TXLINE_API_TOKEN`
+   - `TXLINE_NETWORK` = `mainnet`
+   - `TXLINE_COMPETITION_IDS` = `72`
+   - optional `SOLANA_RPC_URL`
 
-The worker must share the **same** `DATABASE_URL` as Vercel (Neon).
+4. Deploy. Note the public URL, e.g. `https://beat-the-market-worker.onrender.com`.
 
-Confirm health on the web app shows feed cursors connected after the worker
-runs for a minute.
+### Keep-alive (required on Free)
+
+Render **spins down** Free web services after ~15 minutes with no HTTP traffic.
+That would kill the SSE feed.
+
+Create a free job at https://cron-job.org (or UptimeRobot):
+
+- URL: `https://<your-worker>.onrender.com/health`
+- Interval: every **5 minutes**
+- Method: GET
+
+750 free instance hours/month ≈ enough for continuous run through early August
+if the keep-alive stays enabled.
+
+### Confirm
+
+After ~1 minute with the worker up:
+
+`https://<your-vercel-app>/api/health` should show `feed` connected (not `idle`).
 
 ---
 
-## 4. Smoke test (production)
+## 4. Smoke test
 
-1. Open the public URL.
+1. Open the public Vercel URL.
 2. Sign in with email.
-3. Open a World Cup match that has TxLINE odds.
+3. Open a World Cup match with TxLINE odds.
 4. Place a small call.
-5. Confirm `/api/health` reports database and feed status.
+5. Confirm `/api/health` reports database + feed.
 
-If markets are empty, the worker is not running or TxLINE credentials are wrong.
+If markets are empty, the worker is down, keep-alive failed, or TxLINE
+credentials are wrong.
 
 ---
 
-## 5. What is live vs practice
+## 5. Live vs practice
 
 | Mode | When |
 | --- | --- |
-| Live TxLINE worker | Production (this document) |
+| Live TxLINE worker (Render) | Production |
 | Practice cinema (`demo:cinema`) | Local video recording only |
 
 Production must stay on the live path.
