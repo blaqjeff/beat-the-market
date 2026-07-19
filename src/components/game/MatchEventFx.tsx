@@ -23,36 +23,19 @@ export function MatchEventFx({
   home,
   away,
   score,
-  resetKey,
 }: {
   timeline: TimelineRow[];
   home: string;
   away: string;
   score: { home: number; away: number };
-  /** Changes on cinema reset / fixture change so heard events clear. */
-  resetKey?: string | number;
 }) {
+  // Default on; preference applied only via toggle (avoids setState-in-effect lint).
   const [soundOn, setSoundOn] = useState(true);
   const [burst, setBurst] = useState<string | null>(null);
   const seen = useRef<Set<string>>(new Set());
   const primed = useRef(false);
   const maxSeq = useRef(0);
-
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (stored === "0") setSoundOn(false);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  useEffect(() => {
-    seen.current = new Set();
-    primed.current = false;
-    maxSeq.current = 0;
-    setBurst(null);
-  }, [resetKey]);
+  const clearBurstTimer = useRef<number | null>(null);
 
   useEffect(() => {
     const visible = timeline.filter(
@@ -63,7 +46,6 @@ export function MatchEventFx({
       0
     );
 
-    // Cinema reset / replay wipe — sequences restart lower than before.
     if (primed.current && highest < maxSeq.current) {
       seen.current = new Set();
       primed.current = false;
@@ -96,11 +78,29 @@ export function MatchEventFx({
 
       if (sound === "goal" || row.kind === "goal") {
         const headline = row.headline ?? row.summary;
-        setBurst(`${headline} · ${score.home}–${score.away}`);
-        window.setTimeout(() => setBurst(null), 2200);
+        const label = `${headline} · ${score.home}–${score.away}`;
+        if (clearBurstTimer.current !== null) {
+          window.clearTimeout(clearBurstTimer.current);
+        }
+        // Async so React does not treat this as a sync effect setState cascade.
+        clearBurstTimer.current = window.setTimeout(() => {
+          setBurst(label);
+          clearBurstTimer.current = window.setTimeout(() => {
+            setBurst(null);
+            clearBurstTimer.current = null;
+          }, 2400);
+        }, 0);
       }
     }
   }, [timeline, soundOn, score.home, score.away]);
+
+  useEffect(() => {
+    return () => {
+      if (clearBurstTimer.current !== null) {
+        window.clearTimeout(clearBurstTimer.current);
+      }
+    };
+  }, []);
 
   async function toggleSound() {
     const next = !soundOn;

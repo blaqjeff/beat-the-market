@@ -252,8 +252,8 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastRefreshAt, setLastRefreshAt] = useState<number | null>(null);
-  const [boardTab, setBoardTab] = useState<"timeline" | "odds">("timeline");
-  const [scorePulse, setScorePulse] = useState(false);
+  const [boardTab, setBoardTab] = useState<"timeline" | "odds">("odds");
+  const [tabPhase, setTabPhase] = useState(initialState.live.phase);
 
   const selectedOutcome = useMemo(() => {
     if (!selected) return null;
@@ -278,16 +278,11 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
   const showSettled =
     state.settledPoints > 0 || state.live.phase === "finished";
 
-  useEffect(() => {
-    if (matchLive) setBoardTab("timeline");
-    else setBoardTab("odds");
-  }, [matchLive, state.live.phase]);
-
-  useEffect(() => {
-    setScorePulse(true);
-    const id = window.setTimeout(() => setScorePulse(false), 900);
-    return () => window.clearTimeout(id);
-  }, [state.live.score.home, state.live.score.away]);
+  // Adjust default tab when match phase flips (React-recommended render-time update).
+  if (state.live.phase !== tabPhase) {
+    setTabPhase(state.live.phase);
+    setBoardTab(matchLive ? "timeline" : "odds");
+  }
 
   const sheetCalls = useMemo(
     () =>
@@ -606,11 +601,11 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(200,241,53,0.08),transparent_55%)]"
         />
         <MatchEventFx
+          key={state.fixture.sourceFixtureId}
           timeline={state.live.timeline}
           home={state.fixture.home}
           away={state.fixture.away}
           score={state.live.score}
-          resetKey={state.fixture.sourceFixtureId}
         />
         <div className="relative p-6 sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-3 pr-20">
@@ -631,9 +626,8 @@ export function MatchCentre({ initialState }: { initialState: MatchState }) {
             </div>
             <div className="px-2 text-center sm:px-4">
               <p
-                className={`font-[family-name:var(--font-display)] text-5xl tabular-nums tracking-wide text-[color:var(--chalk)] sm:text-6xl ${
-                  scorePulse ? "animate-score-pulse" : ""
-                }`}
+                key={`${state.live.score.home}-${state.live.score.away}`}
+                className="animate-score-pulse font-[family-name:var(--font-display)] text-5xl tabular-nums tracking-wide text-[color:var(--chalk)] sm:text-6xl"
               >
                 {state.live.score.home}
                 <span className="mx-1 text-[color:var(--muted)] sm:mx-2">–</span>

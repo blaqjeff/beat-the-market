@@ -1,6 +1,7 @@
-/** Browser-only match cues via Web Audio (no asset files). */
+/** Match event cues — goal uses a recorded stadium-roar WAV; others are Web Audio. */
 
 let sharedCtx: AudioContext | null = null;
+let roarElement: HTMLAudioElement | null = null;
 
 function getCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -13,25 +14,37 @@ function getCtx(): AudioContext | null {
   return sharedCtx;
 }
 
+function getRoarElement(): HTMLAudioElement | null {
+  if (typeof window === "undefined") return null;
+  if (!roarElement) {
+    roarElement = new Audio("/sounds/stadium-roar.wav");
+    roarElement.preload = "auto";
+    roarElement.volume = 0.95;
+  }
+  return roarElement;
+}
+
 /** Call from a click/tap so later cues can play after async fetches. */
 export async function unlockMatchAudio(): Promise<void> {
   const ctx = getCtx();
-  if (!ctx) return;
-  if (ctx.state === "suspended") {
+  if (ctx?.state === "suspended") {
     try {
       await ctx.resume();
     } catch {
       /* ignore */
     }
   }
-  if (ctx.state === "running") {
-    const gain = ctx.createGain();
-    gain.gain.value = 0.00001;
-    const osc = ctx.createOscillator();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.01);
+  const roar = getRoarElement();
+  if (roar) {
+    try {
+      roar.muted = true;
+      await roar.play();
+      roar.pause();
+      roar.currentTime = 0;
+      roar.muted = false;
+    } catch {
+      /* autoplay unlock best-effort */
+    }
   }
 }
 
@@ -59,108 +72,18 @@ function tone(
   osc.stop(start + duration + 0.05);
 }
 
-/** Layered crowd roar — stadium cheer / shout swell for goals. */
-function stadiumRoar(ctx: AudioContext, start: number) {
-  const duration = 2.4;
-  const master = ctx.createGain();
-  master.gain.setValueAtTime(0.0001, start);
-  master.gain.exponentialRampToValueAtTime(0.55, start + 0.12);
-  master.gain.setValueAtTime(0.5, start + 0.55);
-  master.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-  master.connect(ctx.destination);
-
-  // Pink-ish noise bed (crowd mass).
-  const bedLen = Math.floor(ctx.sampleRate * duration);
-  const bed = ctx.createBuffer(1, bedLen, ctx.sampleRate);
-  const bedData = bed.getChannelData(0);
-  let pink = 0;
-  for (let i = 0; i < bedLen; i += 1) {
-    const white = Math.random() * 2 - 1;
-    pink = 0.97 * pink + 0.03 * white;
-    bedData[i] = pink * 0.9;
+async function playStadiumRoar(): Promise<boolean> {
+  const roar = getRoarElement();
+  if (!roar) return false;
+  try {
+    roar.pause();
+    roar.currentTime = 0;
+    roar.volume = 0.95;
+    await roar.play();
+    return true;
+  } catch {
+    return false;
   }
-  const bedSrc = ctx.createBufferSource();
-  bedSrc.buffer = bed;
-  const bedFilter = ctx.createBiquadFilter();
-  bedFilter.type = "bandpass";
-  bedFilter.frequency.setValueAtTime(700, start);
-  bedFilter.frequency.exponentialRampToValueAtTime(1600, start + 0.35);
-  bedFilter.frequency.exponentialRampToValueAtTime(900, start + 1.6);
-  bedFilter.Q.value = 0.7;
-  const bedGain = ctx.createGain();
-  bedGain.gain.value = 0.85;
-  bedSrc.connect(bedFilter);
-  bedFilter.connect(bedGain);
-  bedGain.connect(master);
-  bedSrc.start(start);
-  bedSrc.stop(start + duration + 0.05);
-
-  // Higher “shout” band — voices cutting through.
-  const shoutLen = Math.floor(ctx.sampleRate * duration);
-  const shout = ctx.createBuffer(1, shoutLen, ctx.sampleRate);
-  const shoutData = shout.getChannelData(0);
-  for (let i = 0; i < shoutLen; i += 1) {
-    shoutData[i] = (Math.random() * 2 - 1) * (0.55 + 0.45 * Math.random());
-  }
-  const shoutSrc = ctx.createBufferSource();
-  shoutSrc.buffer = shout;
-  const shoutFilter = ctx.createBiquadFilter();
-  shoutFilter.type = "bandpass";
-  shoutFilter.frequency.setValueAtTime(1800, start);
-  shoutFilter.frequency.linearRampToValueAtTime(2400, start + 0.25);
-  shoutFilter.frequency.linearRampToValueAtTime(1500, start + 1.2);
-  shoutFilter.Q.value = 1.4;
-  const shoutGain = ctx.createGain();
-  shoutGain.gain.setValueAtTime(0.0001, start);
-  shoutGain.gain.exponentialRampToValueAtTime(0.7, start + 0.08);
-  shoutGain.gain.exponentialRampToValueAtTime(0.25, start + 1.1);
-  shoutGain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-  // Tremolo so it feels like overlapping voices, not static noise.
-  const lfo = ctx.createOscillator();
-  const lfoGain = ctx.createGain();
-  lfo.frequency.value = 7.5;
-  lfoGain.gain.value = 0.22;
-  lfo.connect(lfoGain);
-  lfoGain.connect(shoutGain.gain);
-  shoutSrc.connect(shoutFilter);
-  shoutFilter.connect(shoutGain);
-  shoutGain.connect(master);
-  lfo.start(start);
-  lfo.stop(start + duration);
-  shoutSrc.start(start);
-  shoutSrc.stop(start + duration + 0.05);
-
-  // Low boom under the roar (stand reaction).
-  const boom = ctx.createOscillator();
-  const boomGain = ctx.createGain();
-  boom.type = "sine";
-  boom.frequency.setValueAtTime(55, start);
-  boom.frequency.exponentialRampToValueAtTime(42, start + 0.8);
-  boomGain.gain.setValueAtTime(0.0001, start);
-  boomGain.gain.exponentialRampToValueAtTime(0.35, start + 0.06);
-  boomGain.gain.exponentialRampToValueAtTime(0.0001, start + 1.1);
-  boom.connect(boomGain);
-  boomGain.connect(master);
-  boom.start(start);
-  boom.stop(start + 1.15);
-
-  // Short rising “goal!” whistle of energy on top (not melodic chime).
-  const surge = ctx.createOscillator();
-  const surgeGain = ctx.createGain();
-  surge.type = "sawtooth";
-  surge.frequency.setValueAtTime(220, start);
-  surge.frequency.exponentialRampToValueAtTime(480, start + 0.45);
-  surgeGain.gain.setValueAtTime(0.0001, start);
-  surgeGain.gain.exponentialRampToValueAtTime(0.12, start + 0.05);
-  surgeGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.55);
-  const surgeFilter = ctx.createBiquadFilter();
-  surgeFilter.type = "lowpass";
-  surgeFilter.frequency.value = 900;
-  surge.connect(surgeFilter);
-  surgeFilter.connect(surgeGain);
-  surgeGain.connect(master);
-  surge.start(start);
-  surge.stop(start + 0.6);
 }
 
 export type MatchSoundKind = "goal" | "card" | "corner" | "kickoff" | "finish";
@@ -184,6 +107,11 @@ export function soundKindFromBeatId(
 
 export async function playMatchSound(kind: MatchSoundKind): Promise<boolean> {
   await unlockMatchAudio();
+
+  if (kind === "goal") {
+    return playStadiumRoar();
+  }
+
   const ctx = getCtx();
   if (!ctx) return false;
   if (ctx.state === "suspended") {
@@ -196,11 +124,6 @@ export async function playMatchSound(kind: MatchSoundKind): Promise<boolean> {
   if (ctx.state !== "running") return false;
 
   const t = ctx.currentTime + 0.02;
-
-  if (kind === "goal") {
-    stadiumRoar(ctx, t);
-    return true;
-  }
 
   if (kind === "card") {
     tone(ctx, 180, t, 0.1, "square", 0.16);
