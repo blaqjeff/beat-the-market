@@ -162,7 +162,7 @@ function formatDelta(deltaBps: number | null) {
 }
 
 function formatKickoff(iso: string) {
-  return new Date(iso).toLocaleString(undefined, {
+  return new Date(iso).toLocaleString("en-GB", {
     month: "short",
     day: "numeric",
     hour: "numeric",

@@ -141,7 +141,7 @@ export async function getWorldCupHistory(
         match.homeScore,
         match.awayScore
       ),
-      playedLabel: new Date(match.playedAt).toLocaleDateString(undefined, {
+      playedLabel: new Date(match.playedAt).toLocaleDateString("en-GB", {
         month: "short",
         day: "numeric",
         year: "numeric",

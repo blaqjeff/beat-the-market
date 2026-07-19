@@ -116,7 +116,7 @@ export default async function Home() {
         ) : (
           <ul className="mt-4 grid gap-3">
             {fixtures.map((fixture) => {
-              const kickoff = fixture.startsAt.toLocaleString(undefined, {
+              const kickoff = fixture.startsAt.toLocaleString("en-GB", {
                 month: "short",
                 day: "numeric",
                 hour: "numeric",
